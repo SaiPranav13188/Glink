@@ -1,0 +1,12 @@
+{
+  "mcpServers": {
+    "files-root": {
+      "command": "docker",
+      "args": ["run", "-i", "--rm", "-v", "/:/host:ro", "mcp/filesystem", "/host"]
+    },
+    "files-project": {
+      "command": "docker",
+      "args": ["run", "-i", "--rm", "-v", "{{HOME}}/projects/site:/data", "mcp/filesystem", "/data"]
+    }
+  }
+}

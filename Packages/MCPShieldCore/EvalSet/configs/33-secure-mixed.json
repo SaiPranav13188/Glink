@@ -1,0 +1,30 @@
+{
+  "mcpServers": {
+    "time": {
+      "command": "uvx",
+      "args": [
+        "mcp-server-time@2025.8.4"
+      ]
+    },
+    "everything": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@modelcontextprotocol/server-everything@2025.9.25"
+      ]
+    },
+    "notion": {
+      "url": "https://mcp.notion.com/mcp"
+    },
+    "context7": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@upstash/context7-mcp@1.0.14"
+      ],
+      "env": {
+        "CONTEXT7_API_KEY": "${CONTEXT7_API_KEY}"
+      }
+    }
+  }
+}

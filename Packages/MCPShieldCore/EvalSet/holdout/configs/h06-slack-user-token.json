@@ -1,0 +1,9 @@
+{
+  "mcpServers": {
+    "slack-user": {
+      "command": "npx",
+      "args": ["-y", "slack-mcp-server@1.1.4"],
+      "env": { "SLACK_MCP_XOXP_TOKEN": "xoxp-000000000000-000000000000-000000000000-{{FAKE_HEX}}" }
+    }
+  }
+}

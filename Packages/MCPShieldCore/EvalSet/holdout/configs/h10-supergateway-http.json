@@ -1,0 +1,8 @@
+{
+  "mcpServers": {
+    "gateway": {
+      "command": "npx",
+      "args": ["-y", "supergateway@2.1.0", "--sse", "http://mcp.office.example.com:8000/sse"]
+    }
+  }
+}

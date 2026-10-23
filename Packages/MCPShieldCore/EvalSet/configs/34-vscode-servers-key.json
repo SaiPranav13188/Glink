@@ -1,0 +1,18 @@
+{
+  "servers": {
+    "playwright": {
+      "command": "npx",
+      "args": [
+        "@playwright/mcp@0.0.41"
+      ]
+    },
+    "sqlite": {
+      "command": "uvx",
+      "args": [
+        "mcp-server-sqlite==0.6.2",
+        "--db-path",
+        "./data.db"
+      ]
+    }
+  }
+}

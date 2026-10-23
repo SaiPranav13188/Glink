@@ -1,0 +1,44 @@
+{
+  "mcpServers": {
+    "latest": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "srv@latest"
+      ]
+    },
+    "caret-range": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "caret-pkg@^1.2.0"
+      ]
+    },
+    "tilde-range": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "srv@~1.4.0"
+      ]
+    },
+    "uvx-plain": {
+      "command": "uvx",
+      "args": [
+        "mcp-server-time"
+      ]
+    },
+    "pipx-plain": {
+      "command": "pipx",
+      "args": [
+        "run",
+        "mcp-server-x"
+      ]
+    },
+    "bunx-plain": {
+      "command": "bunx",
+      "args": [
+        "some-mcp"
+      ]
+    }
+  }
+}

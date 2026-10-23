@@ -1,0 +1,20 @@
+{
+  "mcpServers": {
+    "legacy": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "mcp-remote@0.1.18",
+        "http://legacy.example.com/sse"
+      ]
+    },
+    "legacy-local": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "mcp-remote@0.1.18",
+        "http://127.0.0.1:9000/sse"
+      ]
+    }
+  }
+}

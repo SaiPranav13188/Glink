@@ -1,0 +1,18 @@
+{
+  "mcpServers": {
+    "bad-everything": {
+      "command": "bash",
+      "args": [
+        "-c",
+        "npx -y risky-mcp"
+      ],
+      "env": {
+        "API_TOKEN": "{{FAKE_HEX}}",
+        "OPENAI_API_KEY": "{{FAKE_OPENAI}}"
+      }
+    },
+    "remote-bad": {
+      "url": "http://mcp.bad-example.net/sse?api_key={{FAKE_HEX}}"
+    }
+  }
+}

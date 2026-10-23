@@ -1,0 +1,18 @@
+{
+  "h01-header-env-reference.json": { "github-remote": [] },
+  "h02-api-key-header.json": { "search": ["CFG-001"] },
+  "h03-mongo-uri.json": { "mongodb": ["CFG-001"] },
+  "h04-db-url-no-password.json": { "postgres-local": [], "postgres-user-only": [] },
+  "h05-db-url-placeholder.json": { "postgres": [] },
+  "h06-slack-user-token.json": { "slack-user": ["CFG-001", "SEC-001"] },
+  "h07-token-flag-equals.json": { "gh-tools": ["CFG-001", "SEC-001"] },
+  "h08-key-file-paths.json": { "gcp": [] },
+  "h09-docker-volume-root.json": { "files-root": ["CFG-005"], "files-project": [] },
+  "h10-supergateway-http.json": { "gateway": ["CFG-003"] },
+  "h11-url-token-query.json": { "zapier": ["CFG-001"] },
+  "h12-non-secret-flags.json": { "llm-proxy": [] },
+  "h13-anthropic-in-header.json": { "claude-relay": ["CFG-001", "SEC-001"] },
+  "h14-docker-env-assignment.json": { "github": ["CFG-001", "SEC-001"] },
+  "h15-placeholder-variety.json": { "openai": [], "github": [], "brave": [] },
+  "h16-local-plain-http.json": { "local-sse": [], "local-proxy": [] }
+}

@@ -1,0 +1,9 @@
+{
+  "mcpServers": {
+    "mongodb": {
+      "command": "npx",
+      "args": ["-y", "mongodb-mcp-server@0.1.2"],
+      "env": { "MDB_MCP_CONNECTION_STRING": "mongodb+srv://admin:{{FAKE_HEX}}@cluster0.example.mongodb.net/app" }
+    }
+  }
+}

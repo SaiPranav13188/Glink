@@ -1,0 +1,8 @@
+{
+  "mcpServers": {
+    "gh-tools": {
+      "command": "node",
+      "args": ["build/index.js", "--token={{FAKE_GITHUB}}"]
+    }
+  }
+}

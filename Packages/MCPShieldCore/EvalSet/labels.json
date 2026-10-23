@@ -1,0 +1,237 @@
+{
+  "01-readme-filesystem.json": {
+    "filesystem": [
+      "CFG-002"
+    ]
+  },
+  "02-readme-github.json": {
+    "github": [
+      "CFG-002"
+    ]
+  },
+  "03-readme-brave-search.json": {
+    "brave-search": [
+      "CFG-002"
+    ]
+  },
+  "04-readme-fetch-git.json": {
+    "fetch": [
+      "CFG-002"
+    ],
+    "git": [
+      "CFG-002"
+    ]
+  },
+  "05-readme-slack-placeholder.json": {
+    "slack": [
+      "CFG-002"
+    ]
+  },
+  "06-readme-docker.json": {
+    "postgres": [],
+    "puppeteer": []
+  },
+  "07-readme-memory.json": {
+    "memory": [
+      "CFG-002"
+    ]
+  },
+  "08-leaked-github-token.json": {
+    "github": [
+      "CFG-001",
+      "SEC-001"
+    ]
+  },
+  "09-leaked-llm-keys.json": {
+    "anthropic-proxy": [
+      "CFG-001",
+      "SEC-001"
+    ],
+    "openai-tools": [
+      "CFG-001",
+      "SEC-001"
+    ]
+  },
+  "10-leaked-aws.json": {
+    "aws": [
+      "CFG-001",
+      "SEC-001"
+    ]
+  },
+  "11-leaked-google-maps.json": {
+    "google-maps": [
+      "CFG-001",
+      "SEC-001"
+    ]
+  },
+  "12-secure-env-references.json": {
+    "github": [],
+    "linear": []
+  },
+  "13-non-secret-key-names.json": {
+    "llm-tools": []
+  },
+  "14-database-url-password.json": {
+    "supabase": [
+      "CFG-001"
+    ]
+  },
+  "15-remote-http.json": {
+    "analytics": [
+      "CFG-003"
+    ],
+    "lan-box": [
+      "CFG-003"
+    ],
+    "local-dev": []
+  },
+  "16-remote-headers.json": {
+    "github-remote": [
+      "CFG-001",
+      "SEC-001"
+    ],
+    "internal-api": [
+      "CFG-001"
+    ],
+    "sentry": []
+  },
+  "17-mcp-remote-proxy.json": {
+    "legacy": [
+      "CFG-003"
+    ],
+    "legacy-local": []
+  },
+  "18-shell-launch.json": {
+    "single-string": [
+      "CFG-004"
+    ],
+    "wrapper": [
+      "CFG-004"
+    ],
+    "zsh-login": [
+      "CFG-004"
+    ]
+  },
+  "19-shell-lookalikes.json": {
+    "node-config-flag": [],
+    "script": []
+  },
+  "20-filesystem-root.json": {
+    "filesystem": [
+      "CFG-005"
+    ]
+  },
+  "21-filesystem-home.json": {
+    "files-tilde": [
+      "CFG-005"
+    ],
+    "filesystem": [
+      "CFG-005"
+    ]
+  },
+  "22-filesystem-scoped.json": {
+    "filesystem": []
+  },
+  "23-filesystem-docker.json": {
+    "filesystem": [
+      "CFG-005"
+    ],
+    "filesystem-scoped": []
+  },
+  "24-git-home-pinned.json": {
+    "git": []
+  },
+  "25-pinned-variants.json": {
+    "npx-package-flag": [],
+    "pipx-pin": [],
+    "plain-pinned": [],
+    "scoped-pinned": [],
+    "uvx-at-pin": [],
+    "uvx-from-pin": []
+  },
+  "26-unpinned-variants.json": {
+    "bunx-plain": [
+      "CFG-002"
+    ],
+    "caret-range": [
+      "CFG-002"
+    ],
+    "latest": [
+      "CFG-002"
+    ],
+    "pipx-plain": [
+      "CFG-002"
+    ],
+    "tilde-range": [
+      "CFG-002"
+    ],
+    "uvx-plain": [
+      "CFG-002"
+    ]
+  },
+  "27-writable-executable.json": {
+    "custom": [
+      "CFG-006"
+    ],
+    "safe-custom": []
+  },
+  "28-writable-script.json": {
+    "node-script": [
+      "CFG-006"
+    ],
+    "shared-folder": [
+      "CFG-006"
+    ],
+    "system-python": []
+  },
+  "29-private-key-in-env.json": {
+    "ssh-tools": [
+      "CFG-001",
+      "SEC-001"
+    ]
+  },
+  "30-github-fine-grained-pat.json": {
+    "github": [
+      "CFG-001",
+      "SEC-001"
+    ]
+  },
+  "31-slack-real-token.json": {
+    "slack": [
+      "CFG-001",
+      "SEC-001"
+    ]
+  },
+  "32-secret-in-args.json": {
+    "openai-cli": [
+      "CFG-001",
+      "SEC-001"
+    ]
+  },
+  "33-secure-mixed.json": {
+    "context7": [],
+    "everything": [],
+    "notion": [],
+    "time": []
+  },
+  "34-vscode-servers-key.json": {
+    "playwright": [],
+    "sqlite": []
+  },
+  "35-kitchen-sink.json": {
+    "bad-everything": [
+      "CFG-001",
+      "CFG-002",
+      "CFG-004",
+      "SEC-001"
+    ],
+    "remote-bad": [
+      "CFG-001",
+      "CFG-003"
+    ]
+  },
+  "36-claude-code-typed.json": {
+    "pg": [],
+    "stripe": []
+  }
+}

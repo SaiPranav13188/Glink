@@ -1,0 +1,23 @@
+{
+  "mcpServers": {
+    "node-script": {
+      "command": "node",
+      "args": [
+        "{{FIXTURES}}/scripts/index.js"
+      ]
+    },
+    "shared-folder": {
+      "command": "python3",
+      "args": [
+        "{{FIXTURES}}/shared-dir/server.py"
+      ]
+    },
+    "system-python": {
+      "command": "/usr/bin/python3",
+      "args": [
+        "-m",
+        "my_server"
+      ]
+    }
+  }
+}

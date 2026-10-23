@@ -1,0 +1,28 @@
+{
+  "mcpServers": {
+    "filesystem": {
+      "command": "docker",
+      "args": [
+        "run",
+        "-i",
+        "--rm",
+        "--mount",
+        "type=bind,src={{HOME}},dst=/projects",
+        "mcp/filesystem",
+        "/projects"
+      ]
+    },
+    "filesystem-scoped": {
+      "command": "docker",
+      "args": [
+        "run",
+        "-i",
+        "--rm",
+        "--mount",
+        "type=bind,src={{HOME}}/code/app,dst=/projects/app",
+        "mcp/filesystem",
+        "/projects"
+      ]
+    }
+  }
+}

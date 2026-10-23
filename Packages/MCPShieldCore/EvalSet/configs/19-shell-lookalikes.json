@@ -1,0 +1,18 @@
+{
+  "mcpServers": {
+    "script": {
+      "command": "bash",
+      "args": [
+        "/Users/dev/mcp/start.sh"
+      ]
+    },
+    "node-config-flag": {
+      "command": "node",
+      "args": [
+        "server.js",
+        "-c",
+        "config.yaml"
+      ]
+    }
+  }
+}

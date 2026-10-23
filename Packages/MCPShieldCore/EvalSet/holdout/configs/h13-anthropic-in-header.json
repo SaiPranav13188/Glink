@@ -1,0 +1,8 @@
+{
+  "mcpServers": {
+    "claude-relay": {
+      "url": "https://relay.example.com/mcp",
+      "headers": { "x-api-key": "{{FAKE_ANTHROPIC}}" }
+    }
+  }
+}

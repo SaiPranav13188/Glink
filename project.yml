@@ -1,0 +1,81 @@
+# Xcode project for Glink. Generate with: xcodegen generate
+# (SwiftPM still works too: `swift build`, `swift test`, `scripts/build-app.sh`.)
+name: Glink
+options:
+  bundleIdPrefix: com.saipranav
+  deploymentTarget:
+    macOS: "14.0"
+  createIntermediateGroups: true
+settings:
+  base:
+    SWIFT_VERSION: "6.0"
+    MACOSX_DEPLOYMENT_TARGET: "14.0"
+    DEAD_CODE_STRIPPING: YES
+packages:
+  KeyboardShortcuts:
+    url: https://github.com/sindresorhus/KeyboardShortcuts
+    from: 2.0.0
+  Sparkle:
+    url: https://github.com/sparkle-project/Sparkle
+    from: 2.9.0
+  MCPShieldCore:
+    path: Packages/MCPShieldCore
+targets:
+  GlinkCore:
+    type: framework
+    platform: macOS
+    sources: [GlinkCore]
+    dependencies:
+      - package: MCPShieldCore
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.saipranav.glink.core
+        GENERATE_INFOPLIST_FILE: YES
+        SKIP_INSTALL: YES
+  Glink:
+    type: application
+    platform: macOS
+    sources:
+      - path: Glink
+        excludes: ["Resources/Info.plist"]
+    dependencies:
+      - target: GlinkCore
+      - package: MCPShieldCore
+      - package: KeyboardShortcuts
+      - package: Sparkle
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.saipranav.glink
+        INFOPLIST_FILE: Glink/Resources/Info.plist
+        CODE_SIGN_ENTITLEMENTS: scripts/Glink.entitlements
+        ENABLE_HARDENED_RUNTIME: YES
+        CODE_SIGN_STYLE: Automatic
+        CODE_SIGN_IDENTITY: "-"
+        ASSETCATALOG_COMPILER_APPICON_NAME: ""
+  GlinkCoreTests:
+    type: bundle.unit-test
+    platform: macOS
+    sources: [Tests/GlinkCoreTests]
+    dependencies:
+      - target: GlinkCore
+      - package: MCPShieldCore
+    settings:
+      base:
+        GENERATE_INFOPLIST_FILE: YES
+  GlinkUITests:
+    type: bundle.ui-testing
+    platform: macOS
+    sources: [UITests]
+    dependencies:
+      - target: Glink
+    settings:
+      base:
+        GENERATE_INFOPLIST_FILE: YES
+        TEST_TARGET_NAME: Glink
+schemes:
+  Glink:
+    build:
+      targets:
+        Glink: all
+    test:
+      targets: [GlinkCoreTests, GlinkUITests]

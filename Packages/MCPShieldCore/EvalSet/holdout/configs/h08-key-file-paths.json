@@ -1,0 +1,12 @@
+{
+  "mcpServers": {
+    "gcp": {
+      "command": "uvx",
+      "args": ["gcp-mcp@0.3.0", "--key-file", "/Users/dev/.config/gcloud/sa.json"],
+      "env": {
+        "GOOGLE_APPLICATION_CREDENTIALS": "/Users/dev/.config/gcloud/sa.json",
+        "SERVICE_ACCOUNT_KEY_FILE": "/Users/dev/.config/gcloud/sa.json"
+      }
+    }
+  }
+}

@@ -1,0 +1,15 @@
+{
+  "mcpServers": {
+    "aws": {
+      "command": "uvx",
+      "args": [
+        "awslabs.aws-api-mcp-server@0.2.1"
+      ],
+      "env": {
+        "AWS_ACCESS_KEY_ID": "{{FAKE_AWS}}",
+        "AWS_SECRET_ACCESS_KEY": "{{FAKE_HEX}}",
+        "AWS_REGION": "us-east-1"
+      }
+    }
+  }
+}

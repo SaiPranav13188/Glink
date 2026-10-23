@@ -1,0 +1,19 @@
+{
+  "mcpServers": {
+    "openai": {
+      "command": "npx",
+      "args": ["-y", "openai-mcp@1.0.3"],
+      "env": { "OPENAI_API_KEY": "sk-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx" }
+    },
+    "github": {
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-github@2025.4.8"],
+      "env": { "GITHUB_PERSONAL_ACCESS_TOKEN": "<YOUR_TOKEN>" }
+    },
+    "brave": {
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-brave-search@0.6.2"],
+      "env": { "BRAVE_API_KEY": "YOUR_API_KEY_HERE" }
+    }
+  }
+}

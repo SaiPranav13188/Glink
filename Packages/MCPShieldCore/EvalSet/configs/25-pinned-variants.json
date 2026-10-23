@@ -1,0 +1,47 @@
+{
+  "mcpServers": {
+    "scoped-pinned": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@scope/pkg@1.2.3"
+      ]
+    },
+    "plain-pinned": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "plain-pkg@0.4.0"
+      ]
+    },
+    "uvx-at-pin": {
+      "command": "uvx",
+      "args": [
+        "ruff-mcp@0.6.0"
+      ]
+    },
+    "uvx-from-pin": {
+      "command": "uvx",
+      "args": [
+        "--from",
+        "mcp-server-git==0.6.2",
+        "mcp-server-git"
+      ]
+    },
+    "pipx-pin": {
+      "command": "pipx",
+      "args": [
+        "run",
+        "some-mcp==1.0.0"
+      ]
+    },
+    "npx-package-flag": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "--package=@scope/tool@2.0.0",
+        "tool-bin"
+      ]
+    }
+  }
+}

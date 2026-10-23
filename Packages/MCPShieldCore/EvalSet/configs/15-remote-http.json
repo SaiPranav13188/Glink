@@ -1,0 +1,13 @@
+{
+  "mcpServers": {
+    "analytics": {
+      "url": "http://mcp.analytics-example.com/sse"
+    },
+    "local-dev": {
+      "url": "http://localhost:8787/mcp"
+    },
+    "lan-box": {
+      "url": "http://192.168.1.20:3000/mcp"
+    }
+  }
+}

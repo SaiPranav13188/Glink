@@ -1,0 +1,14 @@
+{
+  "mcpServers": {
+    "google-maps": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@modelcontextprotocol/server-google-maps@0.6.2"
+      ],
+      "env": {
+        "GOOGLE_MAPS_API_KEY": "{{FAKE_GOOGLE}}"
+      }
+    }
+  }
+}

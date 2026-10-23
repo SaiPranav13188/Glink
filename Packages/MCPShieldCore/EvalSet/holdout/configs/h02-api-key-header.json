@@ -1,0 +1,9 @@
+{
+  "mcpServers": {
+    "search": {
+      "type": "http",
+      "url": "https://search.example.com/mcp",
+      "headers": { "X-API-Key": "{{FAKE_HEX}}" }
+    }
+  }
+}

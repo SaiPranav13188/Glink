@@ -1,0 +1,19 @@
+{
+  "mcpServers": {
+    "sentry": {
+      "url": "https://mcp.sentry.dev/mcp"
+    },
+    "internal-api": {
+      "url": "https://mcp.internal.example.com/mcp",
+      "headers": {
+        "Authorization": "Bearer {{FAKE_HEX}}"
+      }
+    },
+    "github-remote": {
+      "url": "https://api.githubcopilot.com/mcp/",
+      "headers": {
+        "Authorization": "Bearer {{FAKE_GITHUB}}"
+      }
+    }
+  }
+}

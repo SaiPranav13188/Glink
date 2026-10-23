@@ -1,0 +1,7 @@
+{
+  "mcpServers": {
+    "zapier": {
+      "url": "https://actions.example.com/mcp/sse?token={{FAKE_HEX}}"
+    }
+  }
+}

@@ -1,0 +1,13 @@
+{
+  "mcpServers": {
+    "ssh-tools": {
+      "command": "uvx",
+      "args": [
+        "ssh-mcp@0.1.2"
+      ],
+      "env": {
+        "SSH_PRIVATE_KEY": "{{FAKE_PRIVATE_KEY}}"
+      }
+    }
+  }
+}

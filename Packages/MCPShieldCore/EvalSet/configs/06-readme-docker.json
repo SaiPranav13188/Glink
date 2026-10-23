@@ -1,0 +1,26 @@
+{
+  "mcpServers": {
+    "postgres": {
+      "command": "docker",
+      "args": [
+        "run",
+        "-i",
+        "--rm",
+        "mcp/postgres",
+        "postgresql://host.docker.internal:5432/mydb"
+      ]
+    },
+    "puppeteer": {
+      "command": "docker",
+      "args": [
+        "run",
+        "-i",
+        "--rm",
+        "--init",
+        "-e",
+        "DOCKER_CONTAINER=true",
+        "mcp/puppeteer"
+      ]
+    }
+  }
+}

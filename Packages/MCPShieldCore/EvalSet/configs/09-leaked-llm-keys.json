@@ -1,0 +1,22 @@
+{
+  "mcpServers": {
+    "openai-tools": {
+      "command": "node",
+      "args": [
+        "/opt/mcp/openai/index.js"
+      ],
+      "env": {
+        "OPENAI_API_KEY": "{{FAKE_OPENAI}}"
+      }
+    },
+    "anthropic-proxy": {
+      "command": "uvx",
+      "args": [
+        "anthropic-mcp==0.3.1"
+      ],
+      "env": {
+        "ANTHROPIC_API_KEY": "{{FAKE_ANTHROPIC}}"
+      }
+    }
+  }
+}

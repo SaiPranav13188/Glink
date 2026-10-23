@@ -1,0 +1,10 @@
+{
+  "mcpServers": {
+    "custom": {
+      "command": "{{FIXTURES}}/world-writable/server"
+    },
+    "safe-custom": {
+      "command": "{{FIXTURES}}/owner-only/server"
+    }
+  }
+}

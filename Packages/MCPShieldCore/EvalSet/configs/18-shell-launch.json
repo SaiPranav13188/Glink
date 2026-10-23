@@ -1,0 +1,21 @@
+{
+  "mcpServers": {
+    "wrapper": {
+      "command": "bash",
+      "args": [
+        "-c",
+        "source ~/.nvm/nvm.sh && node ~/mcp/server.js"
+      ]
+    },
+    "zsh-login": {
+      "command": "/bin/zsh",
+      "args": [
+        "-lc",
+        "my-mcp-server --stdio"
+      ]
+    },
+    "single-string": {
+      "command": "sh -c 'exec python3 -m my_server'"
+    }
+  }
+}
