@@ -52,6 +52,12 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
     /// `--route clipboard|mcp|snippets` opens a sub-screen instead.
     private func handleDemoArguments() {
         let args = ProcessInfo.processInfo.arguments
+        if let i = args.firstIndex(of: "--ask"), i + 1 < args.count {
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.6) {
+                PanelController.shared.show(route: .ai(AIRequest(command: .ask, input: args[i + 1])))
+            }
+            return
+        }
         guard let i = args.firstIndex(of: "--open") ?? args.firstIndex(of: "--route") else { return }
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.6) {
             if args[i] == "--route", i + 1 < args.count {

@@ -33,6 +33,8 @@ final class OnboardingWindowController: NSObject, NSWindowDelegate {
         w.contentView = NSHostingView(rootView: OnboardingView(onFinish: { [weak self] in
             AppSettings.shared.hasCompletedOnboarding = true
             self?.close()
+            Mascots.celebrate(.onboardingDone)
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) { PanelController.shared.show() }
         }))
         w.delegate = self
         return w

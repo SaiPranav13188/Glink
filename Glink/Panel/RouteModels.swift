@@ -78,23 +78,23 @@ struct AITurn: Identifiable, Equatable {
     var response: String = ""
 }
 
-/// Streams a response and reveals it word by word with a blinking caret.
+/// Streams an on-device response and reveals it word by word with a blinking caret.
 @MainActor @Observable
 final class AIConversationModel {
     private(set) var request: AIRequest?
     private(set) var turns: [AITurn] = []
-    /// Text revealed so far for the last turn (trails the network stream for a smooth cadence).
+    /// Text revealed so far for the last turn (trails the model slightly for a smooth cadence).
     private(set) var revealed = ""
     private(set) var isStreaming = false
     private(set) var error: String?
 
     @ObservationIgnored private var received = ""
     @ObservationIgnored private var streamDone = false
-    @ObservationIgnored private var history: [AIMessage] = []
+    @ObservationIgnored private var history: [AITurnText] = []
     @ObservationIgnored private var streamTask: Task<Void, Never>?
     @ObservationIgnored private var revealTask: Task<Void, Never>?
+    @ObservationIgnored private var pendingInstruction: String?
 
-    var hasKey: Bool { AIService.shared.hasKey }
     var lastResponse: String { turns.last?.response ?? "" }
 
     func start(_ request: AIRequest) {
@@ -103,25 +103,22 @@ final class AIConversationModel {
         turns = []
         history = []
         error = nil
-        let prompt: String
-        if request.command == .ask {
-            prompt = request.input
-        } else {
-            prompt = "\(request.command.instruction)\n\n<text>\n\(request.input)\n</text>"
-        }
-        send(prompt, display: request.input)
+        pendingInstruction = request.command.instruction
+        send(request.input)
     }
 
     func followUp(_ text: String) {
         guard !isStreaming else { return }
-        send(text, display: text)
+        pendingInstruction = nil
+        send(text)
     }
 
     func regenerate() {
-        guard !isStreaming, let last = turns.last, let lastUser = history.last(where: { $0.role == "user" }) else { return }
-        history.removeLast(history.last?.role == "assistant" ? 2 : 1)
+        guard !isStreaming, let last = turns.last else { return }
+        if !history.isEmpty, history.last?.prompt == last.prompt { history.removeLast() }
         turns.removeLast()
-        send(lastUser.content, display: last.prompt)
+        if turns.isEmpty { pendingInstruction = request?.command.instruction }
+        send(last.prompt)
     }
 
     func cancel() {
@@ -130,20 +127,19 @@ final class AIConversationModel {
         isStreaming = false
     }
 
-    private func send(_ prompt: String, display: String) {
+    private func send(_ input: String) {
         error = nil
-        history.append(AIMessage(role: "user", content: prompt))
-        turns.append(AITurn(prompt: display))
+        turns.append(AITurn(prompt: input))
         received = ""
         revealed = ""
         streamDone = false
         isStreaming = true
 
-        let messages = history
+        let stream = AIService.engine.stream(instruction: pendingInstruction, input: input, history: history)
         streamTask = Task { [weak self] in
             do {
-                for try await chunk in AIService.shared.stream(messages) {
-                    self?.received += chunk
+                for try await snapshot in stream {
+                    self?.received = snapshot
                 }
                 self?.streamDone = true
             } catch {
@@ -158,15 +154,22 @@ final class AIConversationModel {
                 try? await Task.sleep(for: .milliseconds(16))
                 guard let self else { return }
                 let pending = self.received.count - self.revealed.count
-                if pending > 0 {
+                if pending > 0, self.received.hasPrefix(self.revealed) {
                     let step = max(1, pending / 12)
                     var end = self.received.index(self.received.startIndex, offsetBy: self.revealed.count + step)
                     while end < self.received.endIndex, !self.received[end].isWhitespace { end = self.received.index(after: end) }
                     self.revealed = String(self.received[..<end])
                     self.turns[self.turns.count - 1].response = self.revealed
+                } else if pending != 0 && !self.received.hasPrefix(self.revealed) {
+                    // The model revised earlier text: show its latest version.
+                    self.revealed = self.received
+                    self.turns[self.turns.count - 1].response = self.revealed
                 } else if self.streamDone {
                     self.isStreaming = false
-                    if !self.received.isEmpty { self.history.append(AIMessage(role: "assistant", content: self.received)) }
+                    if !self.received.isEmpty {
+                        self.history.append(AITurnText(prompt: self.turns.last?.prompt ?? "", response: self.received))
+                        Mascots.celebrate(.aiAnswer)
+                    }
                     return
                 }
             }
@@ -176,6 +179,7 @@ final class AIConversationModel {
     var actions: [ItemAction] {
         let text = lastResponse
         let replaces = request?.command.replacesSelection ?? false
+        let original = request?.input ?? ""
         let copy = ItemAction(id: "copy", title: "Copy Response", symbol: "doc.on.doc", shortcut: replaces ? .cmdReturn : .returnKey) {
             guard !text.isEmpty else { return .stay }
             Paster.copy(text)
@@ -184,8 +188,9 @@ final class AIConversationModel {
         let paste = ItemAction(id: "paste", title: replaces ? "Replace Selection" : "Paste Response", symbol: "doc.on.clipboard",
                                shortcut: replaces ? .returnKey : .cmdReturn) {
             guard !text.isEmpty else { return .stay }
-            if Paster.paste(text) { return .dismiss }
-            return .dismissWithHUD("Copied — press ⌘V to paste")
+            guard Paster.paste(text) else { return .dismissWithHUD("Copied — press ⌘V to paste") }
+            if replaces { UndoCenter.shared.recordAIRewrite(original: original, replacement: text) }
+            return .dismiss
         }
         let regenerate = ItemAction(id: "regenerate", title: "Regenerate", symbol: "arrow.clockwise", shortcut: KeyHint(.command, "r")) { [weak self] in
             self?.regenerate()
@@ -193,9 +198,10 @@ final class AIConversationModel {
         }
         var list = replaces ? [paste, copy] : [copy, paste]
         list.append(regenerate)
-        if !hasKey {
-            list.insert(ItemAction(id: "settings", title: "Add API Key…", symbol: "key", shortcut: .returnKey) {
-                SettingsWindowController.shared.show(pane: .ai)
+        if case .unavailable(let reason) = AIService.availability {
+            list.insert(ItemAction(id: "settings", title: reason.opensSystemSettings ? "Open Apple Intelligence Settings" : "Open AI Settings",
+                                   symbol: "gearshape", shortcut: .returnKey) {
+                if reason.opensSystemSettings { AIService.openAppleIntelligenceSettings() } else { SettingsWindowController.shared.show(pane: .ai) }
                 return .dismiss
             }, at: 0)
         }
@@ -228,6 +234,9 @@ final class MCPCheckModel {
             if elapsed < 0.35 { try? await Task.sleep(for: .seconds(0.35 - elapsed)) }
             report = result
             isScanning = false
+            if !result.results.isEmpty {
+                Mascots.celebrate(result.grade == "Good" ? .securityAllClear : (result.grade == "At risk" ? .securityAtRisk : .copied))
+            }
             try? await Task.sleep(for: .milliseconds(60))
             gaugeProgress = Double(result.score) / 100
         }

@@ -13,8 +13,10 @@ enum Paster {
     /// Long enough for the panel to order out and the previous app's window to become key again.
     static var pasteDelay: TimeInterval { Motion.panelOutDuration + 0.1 }
 
-    static func copy(_ string: String) {
+    /// Puts text on the clipboard. Unless `undoable` is false, the previous contents can be restored with ⌘Z.
+    static func copy(_ string: String, undoable: Bool = true) {
         let pb = NSPasteboard.general
+        if undoable { UndoCenter.shared.recordClipboardReplaced(previous: snapshotPasteboard()) }
         pb.clearContents()
         pb.setString(string, forType: .string)
         ClipboardStore.shared.ignoreCurrentChange()
@@ -24,7 +26,7 @@ enum Paster {
     /// Returns false when Accessibility is missing (the text is still copied).
     @discardableResult
     static func paste(_ string: String, cursorOffsetFromEnd: Int? = nil) -> Bool {
-        copy(string)
+        copy(string, undoable: false)
         guard canSynthesizeKeys else { return false }
         // The panel keeps keyboard focus until its exit animation ends; paste only after that,
         // or ⌘V would land in Glink's own search field.

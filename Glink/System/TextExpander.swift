@@ -110,6 +110,11 @@ final class TextExpander {
             let saved = Paster.snapshotPasteboard()
             Paster.paste(expanded.text, cursorOffsetFromEnd: expanded.cursorOffsetFromEnd)
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.6) { Paster.restorePasteboard(saved) }
+            // Deleting is only safe when the caret sits right after the expansion.
+            if expanded.cursorOffsetFromEnd == nil {
+                UndoCenter.shared.record("Expanded \(snippet.name)", .snippet(insertedCharacters: expanded.text.count,
+                    pid: NSWorkspace.shared.frontmostApplication?.processIdentifier ?? 0), expiresAfter: 30)
+            }
         }
     }
 }

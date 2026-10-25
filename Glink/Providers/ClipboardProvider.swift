@@ -65,8 +65,14 @@ enum ClipboardActions {
             },
             ItemAction(id: "deleteAll", title: "Delete All Unpinned", symbol: "trash.slash",
                        shortcut: KeyHint([.control, .shift], "x"), style: .destructive) {
-                store.clearAll()
-                return .toast(.success("Cleared Clipboard History"))
+                let doomed = store.entries.filter { !$0.isPinned }
+                return .confirm(ConfirmRequest(title: "Delete \(doomed.count) clipboard item\(doomed.count == 1 ? "" : "s")?",
+                                               symbol: "trash.slash",
+                                               changes: doomed.prefix(20).map { "− \($0.title)" } + ["Pinned items are kept."],
+                                               confirmTitle: "Delete All") {
+                    store.clearAll()
+                    return .toast(.success("Cleared Clipboard History"))
+                })
             },
         ]
     }

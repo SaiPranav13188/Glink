@@ -15,7 +15,7 @@ final class HUDController {
         let panel = window ?? makeWindow()
         window = panel
         let screen = NSScreen.screens.first { NSMouseInRect(NSEvent.mouseLocation, $0.frame, false) } ?? NSScreen.main!
-        let size = NSSize(width: 420, height: 120)
+        let size = NSSize(width: 420, height: 160)
         panel.setFrame(NSRect(x: screen.visibleFrame.midX - size.width / 2, y: screen.visibleFrame.minY + 60,
                               width: size.width, height: size.height), display: false)
         panel.appearance = AppSettings.shared.theme.appearance
@@ -63,6 +63,8 @@ private struct HUDView: View {
     let model: HUDModel
 
     var body: some View {
+        ZStack(alignment: .bottom) {
+            MascotStage().frame(height: 120).padding(.bottom, 50)
         VStack {
             Spacer()
             HStack(spacing: 8) {
@@ -83,6 +85,7 @@ private struct HUDView: View {
             .offset(y: model.visible ? 0 : 14)
             .opacity(model.visible ? 1 : 0)
             .padding(.bottom, 24)
+        }
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
     }

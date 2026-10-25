@@ -38,6 +38,8 @@ final class PanelViewModel {
 
     // Feedback
     private(set) var toast: Toast?
+    /// A destructive action waiting for Confirm/Cancel (shown as a sheet over the list).
+    private(set) var pendingConfirm: ConfirmRequest?
     private(set) var shakeTrigger = 0
     private(set) var commandHeld = false
     var focus: PanelFocus = .search
@@ -82,6 +84,7 @@ final class PanelViewModel {
         case .clipboard: return clipboard.sections(query: query)
         case .snippets: return snippets.sections(query: query)
         case .scriptOutput: return []
+        case .recentActions: return UndoCenter.shared.sections(query: query)
         case .mcpCheck: return mcp.sections(query: query)
         case .ai: return []
         }
@@ -125,7 +128,9 @@ final class PanelViewModel {
 
     func prepareForOpen(resetState: Bool) {
         if resetState { resetToRoot() }
+        pendingConfirm = nil
         openCount += 1
+        Mascots.shared.greetIfMorning()
         openedAt = Date()
         // A mouse resting where the panel appears must not steal the keyboard selection.
         lastMouseLocation = NSEvent.mouseLocation
@@ -239,6 +244,7 @@ final class PanelViewModel {
         if let item, ![ItemKind.calculator, .web].contains(item.kind), !item.id.hasPrefix("fallback"), route == nil {
             RankingStore.shared.recordUse(of: item.id)
         }
+        Mascots.shared.countAction()
         actionsPresented = false
         focus = .search
         Task {
@@ -254,6 +260,7 @@ final class PanelViewModel {
         case .dismissWithHUD(let message, let symbol):
             onDismiss()
             HUDController.shared.show(message, symbol: symbol)
+            if message.hasPrefix("Copied") { Mascots.celebrate(.copied) }
         case .stay:
             break
         case .toast(let t):
@@ -264,6 +271,9 @@ final class PanelViewModel {
             push(r)
         case .setQuery(let q):
             query = q
+        case .confirm(let request):
+            pendingConfirm = request
+            actionsPresented = false
         }
     }
 
@@ -278,7 +288,7 @@ final class PanelViewModel {
         case .mcpCheck: mcp.scanIfNeeded()
         case .clipboard: clipboard.refresh()
         case .snippets: snippets.refresh()
-        case .scriptOutput: break
+        case .scriptOutput, .recentActions: break
         }
         selectedID = flatItems.first?.id
     }
@@ -325,6 +335,18 @@ final class PanelViewModel {
         }
     }
 
+    // MARK: - Confirm previews
+
+    func confirmPending() {
+        guard let request = pendingConfirm else { return }
+        pendingConfirm = nil
+        Task { handle(await request.onConfirm()) }
+    }
+
+    func cancelConfirm() {
+        pendingConfirm = nil
+    }
+
     // MARK: - Actions panel
 
     func toggleActions() {
@@ -359,7 +381,7 @@ final class PanelViewModel {
     func showToast(_ t: Toast) {
         toastTask?.cancel()
         toast = t
-        let duration: Double = t.style == .failure ? 4 : 2
+        let duration: Double = t.undoID != nil ? 5 : (t.style == .failure ? 4 : 2)
         toastTask = Task { [weak self] in
             try? await Task.sleep(for: .seconds(duration))
             guard let self, !Task.isCancelled, self.toast?.id == t.id else { return }
@@ -392,6 +414,18 @@ final class PanelViewModel {
         if mods == .command, event.charactersIgnoringModifiers == "," {
             onDismiss()
             SettingsWindowController.shared.show()
+            return true
+        }
+
+        if pendingConfirm != nil {
+            if code == kVK_Escape { cancelConfirm(); return true }
+            if code == kVK_Return || code == kVK_ANSI_KeypadEnter { confirmPending(); return true }
+            return true   // nothing else while the preview is up
+        }
+
+        // ⌘Z with an empty field undoes Glink's last action (in the field, it edits text as usual).
+        if mods == .command, event.charactersIgnoringModifiers?.lowercased() == "z", query.isEmpty {
+            if let title = UndoCenter.shared.undoLast() { showToast(.success("Undone", title)) } else { shake() }
             return true
         }
 

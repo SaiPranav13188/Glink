@@ -141,12 +141,13 @@ final class SearchEngine {
             }]
         )
         let ai = SearchItem(
-            id: "fallback.ai", title: "Ask AI “\(query)”", subtitle: "Claude",
+            id: "fallback.ai", title: "Ask AI “\(query)”", subtitle: "On-device · Private",
             icon: .symbol("sparkles", tint: .purple), kind: .ai, accessory: "AI",
             actions: [ItemAction(id: "open", title: "Ask AI", symbol: "sparkles", shortcut: .returnKey) {
                 .push(.ai(AIRequest(command: .ask, input: query)))
             }]
         )
-        return ResultSection(id: "fallback", title: "Use “\(query)” with…", items: [web, files, ai])
+        let items = AIService.availability.isAvailable ? [web, files, ai] : [web, files]
+        return ResultSection(id: "fallback", title: "Use “\(query)” with…", items: items)
     }
 }

@@ -100,6 +100,20 @@ enum ActionOutcome {
     case toast(Toast)
     case push(Route)
     case setQuery(String)
+    /// Show exactly what will change, then run `onConfirm` only if the user confirms.
+    case confirm(ConfirmRequest)
+}
+
+/// A destructive action waiting for the user's go-ahead.
+struct ConfirmRequest: Identifiable {
+    let id = UUID()
+    var title: String
+    var symbol: String = "exclamationmark.triangle.fill"
+    /// Exactly what will change, one line each.
+    var changes: [String]
+    var confirmTitle: String
+    var destructive = true
+    let onConfirm: @MainActor () async -> ActionOutcome
 }
 
 struct ItemAction: Identifiable {
@@ -167,6 +181,16 @@ struct Toast: Identifiable, Equatable {
     var title: String
     var message: String?
     var retry: (@MainActor () -> Void)?
+    /// When set, the toast offers Undo for that UndoCenter entry and drains over 5 seconds.
+    var undoID: UUID?
+
+    init(style: Style, title: String, message: String? = nil, retry: (@MainActor () -> Void)? = nil, undoID: UUID? = nil) {
+        self.style = style
+        self.title = title
+        self.message = message
+        self.retry = retry
+        self.undoID = undoID
+    }
 
     static func == (a: Toast, b: Toast) -> Bool { a.id == b.id }
 
@@ -183,6 +207,7 @@ enum Route: Hashable {
     case mcpCheck
     case snippets
     case scriptOutput(ScriptOutput)
+    case recentActions
 
     var title: String {
         switch self {
@@ -191,6 +216,7 @@ enum Route: Hashable {
         case .mcpCheck: "MCP Config Check"
         case .snippets: "Search Snippets"
         case .scriptOutput(let o): o.title
+        case .recentActions: "Recent Actions"
         }
     }
 
@@ -201,6 +227,7 @@ enum Route: Hashable {
         case .mcpCheck: .symbol("checkmark.shield", tint: .green)
         case .snippets: .symbol("text.quote", tint: .pink)
         case .scriptOutput: .symbol("terminal", tint: .gray)
+        case .recentActions: .symbol("arrow.uturn.backward", tint: .blue)
         }
     }
 
@@ -211,6 +238,7 @@ enum Route: Hashable {
         case .mcpCheck: "Filter servers, clients or rules…"
         case .snippets: "Search snippets…"
         case .scriptOutput: "Filter output…"
+        case .recentActions: "Search recent actions…"
         }
     }
 }

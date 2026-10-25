@@ -1,20 +1,47 @@
 import AppKit
 import GlinkCore
 
-/// AI commands: Ask AI (takes an argument) and actions on the selected text.
+/// On-device AI commands. When the model isn't available they're hidden; asking for AI shows one
+/// inline card that explains why instead.
 @MainActor
 final class AIProvider: SearchProvider {
     let id = "ai"
-    let sectionTitle = "AI"
+    let sectionTitle = "AI · On-device"
     let sectionOrder = 7
-    let limit = 4
+    let limit = 6
 
     private let targets: [(AICommand, MatchTarget)] = AICommand.allCases.map {
-        ($0, MatchTarget(title: $0.title, keywords: ["ai claude llm", $0 == .ask ? "chat question" : "selection text"]))
+        ($0, MatchTarget(title: $0.title, keywords: ["ai assistant llm on-device private",
+                                                     $0 == .ask ? "chat question" : "selection text clipboard"]))
     }
 
     func results(for query: String) async -> [SearchItem] {
-        let q = FuzzyMatcher.prepareQuery(query)
+        let trimmed = query.trimmingCharacters(in: .whitespaces)
+        let q = FuzzyMatcher.prepareQuery(trimmed)
+        let availability = AIService.availability
+
+        guard case .available = availability else {
+            // Hide the commands; only explain why when someone is clearly looking for AI.
+            let lowered = trimmed.lowercased()
+            guard ["ai", "ask", "rewrite", "summar"].contains(where: { lowered.hasPrefix($0) }),
+                  case .unavailable(let reason) = availability else { return [] }
+            return [Self.unavailableCard(reason)]
+        }
+
+        // "ask what is a closure in swift" runs directly.
+        if trimmed.lowercased().hasPrefix("ask ") {
+            let question = String(trimmed.dropFirst(4)).trimmingCharacters(in: .whitespaces)
+            if !question.isEmpty {
+                var item = Self.item(for: .ask, score: 3, indices: [])
+                item.title = "Ask AI: \(question)"
+                item.requiresArgument = false
+                item.actions = [ItemAction(id: "ask", title: "Ask On-device AI", symbol: "sparkles", shortcut: .returnKey) {
+                    .push(.ai(AIRequest(command: .ask, input: question)))
+                }]
+                return [item]
+            }
+        }
+
         return targets.compactMap { command, target in
             guard let m = target.match(q) else { return nil }
             return Self.item(for: command, score: m.score * 0.9, indices: m.matchedIndices)
@@ -22,27 +49,52 @@ final class AIProvider: SearchProvider {
     }
 
     func item(withID id: String) -> SearchItem? {
-        guard id.hasPrefix("ai."), let command = AICommand(rawValue: String(id.dropFirst(3))) else { return nil }
+        guard AIService.availability.isAvailable,
+              id.hasPrefix("ai."), let command = AICommand(rawValue: String(id.dropFirst(3))) else { return nil }
         return Self.item(for: command, score: 0, indices: [])
     }
 
-    func suggestions() -> [SearchItem] { [Self.item(for: .ask, score: 0, indices: [])] }
+    func suggestions() -> [SearchItem] {
+        AIService.availability.isAvailable ? [Self.item(for: .ask, score: 0, indices: [])] : []
+    }
+
+    static func unavailableCard(_ reason: AIUnavailableReason) -> SearchItem {
+        SearchItem(id: "ai.unavailable", title: reason.title, subtitle: reason.message,
+                   icon: .symbol("sparkles", tint: .gray), kind: .ai, score: 1, accessory: "AI",
+                   actions: [ItemAction(id: "fix", title: reason.opensSystemSettings ? "Open Apple Intelligence Settings" : "Open Glink AI Settings",
+                                        symbol: "gearshape", shortcut: .returnKey) {
+                       if reason.opensSystemSettings { AIService.openAppleIntelligenceSettings() }
+                       else { SettingsWindowController.shared.show(pane: .ai) }
+                       return .dismiss
+                   }])
+    }
 
     static func item(for command: AICommand, score: Double, indices: [Int]) -> SearchItem {
+        let subtitle: String? = switch command.source {
+        case .none: "On-device · Private"
+        case .selection: "Uses the selected text · On-device"
+        case .clipboard: "Uses your clipboard · On-device"
+        }
         var item = SearchItem(
-            id: "ai.\(command.rawValue)", title: command.title,
-            subtitle: command.usesSelection ? "Uses the selected text" : nil,
+            id: "ai.\(command.rawValue)", title: command.title, subtitle: subtitle,
             icon: .symbol(command.symbol, tint: .purple), kind: .ai, score: score, matchedIndices: indices,
             accessory: "AI"
         )
-        if command == .ask {
+        switch command.source {
+        case .none:
             item.argumentPlaceholder = "Ask anything"
             item.requiresArgument = true
-            item.runWithArgument = { text in
-                .push(.ai(AIRequest(command: .ask, input: text)))
-            }
+            item.runWithArgument = { text in .push(.ai(AIRequest(command: .ask, input: text))) }
             item.actions = [ItemAction(id: "ask", title: "Ask AI", symbol: "sparkles", shortcut: .returnKey) { .stay }]
-        } else {
+        case .clipboard:
+            item.actions = [ItemAction(id: "run", title: "Summarize Clipboard", symbol: command.symbol, shortcut: .returnKey) {
+                guard let clip = NSPasteboard.general.string(forType: .string),
+                      !clip.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
+                    return .toast(.failure("Clipboard has no text", "Copy some text, then try again."))
+                }
+                return .push(.ai(AIRequest(command: command, input: clip, sourceLabel: "Clipboard text")))
+            }]
+        case .selection:
             item.actions = [ItemAction(id: "run", title: "Run with Selected Text", symbol: command.symbol, shortcut: .returnKey) {
                 let appName = PanelController.shared.previousApp?.localizedName
                 if let selected = SelectedTextReader.selectedText() {

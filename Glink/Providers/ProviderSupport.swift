@@ -65,12 +65,21 @@ enum FileActions {
         } else {
             actions.append(ItemAction(id: "trash", title: "Move to Trash", symbol: "trash",
                                       shortcut: KeyHint(.control, "x"), style: .destructive) {
-                do {
-                    try FileManager.default.trashItem(at: url, resultingItemURL: nil)
-                    return .toast(.success("Moved to Trash", url.lastPathComponent))
-                } catch {
-                    return .toast(.failure("Couldn't move to Trash", error.localizedDescription))
-                }
+                .confirm(ConfirmRequest(title: "Move to Trash?", symbol: "trash",
+                                        changes: ["\((path as NSString).abbreviatingWithTildeInPath)  →  Trash"],
+                                        confirmTitle: "Move to Trash") {
+                    do {
+                        var inTrash: NSURL?
+                        try FileManager.default.trashItem(at: url, resultingItemURL: &inTrash)
+                        if let inTrash = inTrash as URL? {
+                            UndoCenter.shared.recordTrash(original: url, inTrash: inTrash)
+                            return .stay
+                        }
+                        return .toast(.success("Moved to Trash", url.lastPathComponent))
+                    } catch {
+                        return .toast(.failure("Couldn't move to Trash", error.localizedDescription))
+                    }
+                })
             })
         }
         return actions

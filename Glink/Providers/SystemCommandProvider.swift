@@ -35,6 +35,10 @@ final class SystemCommandProvider: SearchProvider {
             SettingsWindowController.shared.show(pane: .quicklinks, createNew: true)
             return .dismiss
         },
+        Command(id: "recentActions", title: "Recent Actions", subtitle: "Undo window snaps, trashed files and more",
+                symbol: "arrow.uturn.backward", tint: .blue, keywords: ["undo history revert"], suggested: false) {
+            .push(.recentActions)
+        },
         Command(id: "notes", title: "Floating Notes", subtitle: "Toggle the always-on-top notes window", symbol: "note.text",
                 tint: .yellow, keywords: ["scratchpad jot memo sticky"], suggested: false) {
             FloatingNotesController.shared.toggle()

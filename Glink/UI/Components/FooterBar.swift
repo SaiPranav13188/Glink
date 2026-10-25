@@ -72,6 +72,7 @@ struct ToastView: View {
     let toast: Toast
     var onDismiss: () -> Void
     @State private var bounce = 0
+    @State private var shownAt = Date()
 
     var body: some View {
         HStack(spacing: 7) {
@@ -84,6 +85,13 @@ struct ToastView: View {
                     .foregroundStyle(.secondary)
                     .lineLimit(1)
             }
+            if let undoID = toast.undoID {
+                Button("Undo") {
+                    if UndoCenter.shared.undo(undoID) { onDismiss() }
+                }
+                .controlSize(.small)
+                .buttonStyle(.bordered)
+            }
             if let retry = toast.retry {
                 Button(toast.style == .failure && toast.title.contains("Accessibility") ? "Enable" : "Retry") {
                     retry()
@@ -92,6 +100,9 @@ struct ToastView: View {
                 .controlSize(.small)
                 .buttonStyle(.bordered)
             }
+        }
+        .overlay(alignment: .bottom) {
+            if toast.undoID != nil { UndoCountdownBar(started: shownAt, duration: 5).offset(y: 10) }
         }
         .onAppear { bounce += 1 }
         .accessibilityElement(children: .combine)

@@ -25,6 +25,7 @@ struct PanelRootView: View {
         // Model state changes plainly; the views declare how each change animates.
         .motion(Motion.smooth, value: model.route)
         .motion(Motion.snappy, value: model.actionsPresented)
+        .motion(Motion.snappy, value: model.pendingConfirm?.id)
         .motion(Motion.snappy, value: model.argumentItem?.id)
         .motion(Motion.gentle, value: model.showSkeleton)
         // While the panel springs in, results appear in place: animating the list (row transitions,
@@ -42,17 +43,30 @@ struct PanelRootView: View {
                 .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
                 .clipped()
                 .overlay {
-                    // The list behind the actions panel dims slightly.
-                    if model.actionsPresented {
+                    // The list behind the actions panel (or a confirm preview) dims slightly.
+                    if model.actionsPresented || model.pendingConfirm != nil {
                         Color.black.opacity(scheme == .dark ? 0.22 : 0.08)
                             .contentShape(Rectangle())
-                            .onTapGesture { model.closeActions() }
+                            .onTapGesture { model.pendingConfirm != nil ? model.cancelConfirm() : model.closeActions() }
                             .transition(.opacity)
                     }
                 }
             FooterBar(model: model)
         }
         .background(PanelBackground(style: settings.windowStyle))
+        .overlay(alignment: .bottom) {
+            if let request = model.pendingConfirm {
+                ConfirmSheet(request: request, onConfirm: model.confirmPending, onCancel: model.cancelConfirm)
+                    .padding(.horizontal, 60)
+                    .padding(.bottom, Theme.Panel.footerHeight + 8)
+                    .transition(moving ? .move(edge: .bottom).combined(with: .opacity) : .opacity)
+            }
+        }
+        .overlay(alignment: .bottom) {
+            MascotStage()
+                .frame(height: 120)
+                .padding(.bottom, Theme.Panel.footerHeight - 6)
+        }
         .overlay(alignment: .bottomTrailing) {
             if model.actionsPresented {
                 ActionPanelView(model: model)
@@ -90,6 +104,8 @@ struct PanelRootView: View {
                 AIResponseView(model: model).transition(routeTransition(forward: true))
             case .mcpCheck:
                 MCPCheckView(model: model).transition(routeTransition(forward: true))
+            case .recentActions:
+                RecentActionsView(model: model).transition(routeTransition(forward: true))
             case .scriptOutput(let output):
                 ScriptOutputView(output: output, filter: model.query).transition(routeTransition(forward: true))
             case .snippets:
@@ -144,6 +160,9 @@ struct PanelRootView: View {
         }
         var height = min(Theme.Panel.maxHeight, chrome + list)
         // While ⌘K is open, grow so the actions menu is never squeezed by a short result list.
+        if model.pendingConfirm != nil {
+            height = max(height, min(Theme.Panel.maxHeight, Theme.Panel.searchHeight + 1 + 230 + Theme.Panel.footerHeight))
+        }
         if model.actionsPresented {
             let menu = ActionPanelView.height(actionCount: model.filteredActions.count)
             height = max(height, min(Theme.Panel.maxHeight, Theme.Panel.searchHeight + 1 + 8 + menu + Theme.Panel.footerHeight + 6))

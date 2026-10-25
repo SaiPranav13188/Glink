@@ -33,7 +33,9 @@ let package = Package(
             linkerSettings: [
                 .linkedFramework("Carbon"),
                 // Sparkle.framework is embedded in Glink.app/Contents/Frameworks by scripts/build-app.sh.
-                .unsafeFlags(["-Xlinker", "-rpath", "-Xlinker", "@executable_path/../Frameworks"]),
+                .unsafeFlags(["-Xlinker", "-rpath", "-Xlinker", "@executable_path/../Frameworks",
+                              // On-device AI is macOS 26+; weak-link so Glink still launches on 14 and 15.
+                              "-Xlinker", "-weak_framework", "-Xlinker", "FoundationModels"]),
             ]
         ),
         .testTarget(

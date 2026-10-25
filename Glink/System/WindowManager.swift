@@ -129,8 +129,11 @@ final class WindowManager {
         let target = command.frame(in: destinationScreen.visibleFrame, current: current).integral
 
         SnapPreviewController.shared.preview(from: current, to: target, on: destinationScreen) { [weak self] in
+            UndoCenter.shared.recordWindowMove(window: window, previousAXFrame: axFrame, appName: app.localizedName,
+                                               command: command.title)
             self?.apply(target, to: window)
             Haptics.tick()
+            Mascots.celebrate(.windowSnapped)
         }
         return .success(())
     }

@@ -72,8 +72,6 @@ final class AppSettings {
     var snippetsEnabled: Bool { didSet { save(snippetsEnabled, "snippetsEnabled") } }
     var fileSearchEnabled: Bool { didSet { save(fileSearchEnabled, "fileSearchEnabled") } }
     var hasCompletedOnboarding: Bool { didSet { save(hasCompletedOnboarding, "hasCompletedOnboarding") } }
-    var aiModel: String { didSet { save(aiModel, "aiModel") } }
-    var aiEffort: String { didSet { save(aiEffort, "aiEffort") } }
     var debugLogging: Bool { didSet { save(debugLogging, "debugLogging") } }
     /// Extra MCP config files or folders added with "Add Config…".
     var mcpExtraPaths: [String] { didSet { save(mcpExtraPaths, "mcpExtraPaths") } }
@@ -99,8 +97,6 @@ final class AppSettings {
         snippetsEnabled = d.object(forKey: "snippetsEnabled") as? Bool ?? true
         fileSearchEnabled = d.object(forKey: "fileSearchEnabled") as? Bool ?? true
         hasCompletedOnboarding = d.bool(forKey: "hasCompletedOnboarding")
-        aiModel = d.string(forKey: "aiModel") ?? AIService.defaultModel
-        aiEffort = d.string(forKey: "aiEffort") ?? "low"
         debugLogging = d.bool(forKey: "debugLogging")
         mcpExtraPaths = d.stringArray(forKey: "mcpExtraPaths") ?? []
         menuBarMiniMode = d.bool(forKey: "menuBarMiniMode")
@@ -135,7 +131,7 @@ final class AppSettings {
 
     static let exportedKeys = ["theme", "windowStyle", "animationLevel", "textSize", "panelPosition",
                                "clipboardHistoryLimit", "clipboardEnabled", "ignoredBundleIDs", "snippetsEnabled",
-                               "fileSearchEnabled", "aiModel", "aiEffort", "mcpExtraPaths", "menuBarMiniMode"]
+                               "fileSearchEnabled", "aiEnabled", "mcpExtraPaths", "menuBarMiniMode"]
 
     func exportDictionary() -> [String: Any] {
         var out: [String: Any] = [:]
@@ -156,7 +152,5 @@ final class AppSettings {
         ignoredBundleIDs = d.stringArray(forKey: "ignoredBundleIDs") ?? ignoredBundleIDs
         snippetsEnabled = d.object(forKey: "snippetsEnabled") as? Bool ?? snippetsEnabled
         fileSearchEnabled = d.object(forKey: "fileSearchEnabled") as? Bool ?? fileSearchEnabled
-        aiModel = d.string(forKey: "aiModel") ?? aiModel
-        aiEffort = d.string(forKey: "aiEffort") ?? aiEffort
     }
 }

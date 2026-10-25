@@ -65,6 +65,7 @@ struct GeneralSettingsPane: View {
 
 struct AppearanceSettingsPane: View {
     @Bindable private var settings = AppSettings.shared
+    @AppStorage("playfulMascots") private var mascots = true
 
     var body: some View {
         Form {
@@ -87,6 +88,9 @@ struct AppearanceSettingsPane: View {
                     ForEach(AnimationLevel.allCases) { Text($0.title).tag($0) }
                 }
                 .pickerStyle(.segmented)
+                Toggle("Playful mascots (a kitten, a puppy and friends now and then)", isOn: $mascots)
+                Button("Say hi 👋") { Mascots.shared.celebrate(.milestone(100)) }
+                    .disabled(!mascots)
             } footer: {
                 Text("Glink also follows Reduce Motion, Reduce Transparency and Increase Contrast in System Settings › Accessibility.")
                     .font(.footnote).foregroundStyle(.secondary)
@@ -447,92 +451,46 @@ private struct QuicklinkEditor: View {
     }
 }
 
-// MARK: - AI
+// MARK: - AI (on-device)
 
 struct AISettingsPane: View {
-    @Bindable private var settings = AppSettings.shared
-    @State private var key = Keychain.read(AIService.keychainAccount) ?? ""
-    @State private var status: TestStatus = .idle
-    @State private var saved = false
-
-    enum TestStatus: Equatable { case idle, testing, success, failure(String) }
+    @AppStorage("aiEnabled") private var enabled = true
+    @State private var availability = AIService.availability
 
     var body: some View {
         Form {
             Section {
-                SecureField("Anthropic API key", text: $key, prompt: Text("sk-ant-…"))
-                    .onSubmit(save)
-                HStack {
-                    Button("Save Key", action: save).disabled(key.isEmpty)
-                    if saved {
-                        Label("Saved to Keychain", systemImage: "checkmark.circle.fill")
-                            .foregroundStyle(.green)
-                            .font(.callout)
-                            .transition(.opacity.combined(with: .scale(scale: 0.9)))
+                Toggle("Enable on-device AI", isOn: $enabled)
+                    .onChange(of: enabled) { availability = AIService.availability }
+                HStack(spacing: 10) {
+                    Image(systemName: availability.isAvailable ? "checkmark.circle.fill" : "exclamationmark.circle.fill")
+                        .foregroundStyle(availability.isAvailable ? Color.green : Color.orange)
+                        .contentTransition(.symbolEffect(.replace))
+                        .accessibilityHidden(true)
+                    VStack(alignment: .leading, spacing: 2) {
+                        if case .unavailable(let reason) = availability {
+                            Text(reason.title)
+                            Text(reason.message).font(.callout).foregroundStyle(.secondary)
+                        } else {
+                            Text("Apple's on-device model is ready")
+                            Text("Ask AI, rewrite selected text and summarize your clipboard.").font(.callout).foregroundStyle(.secondary)
+                        }
                     }
                     Spacer()
-                    Link("Get a key", destination: URL(string: "https://console.anthropic.com/settings/keys")!)
-                        .font(.callout)
+                    if case .unavailable(let reason) = availability, reason.opensSystemSettings {
+                        Button("Open Settings") { AIService.openAppleIntelligenceSettings() }
+                    }
                 }
+                .motion(Motion.smooth, value: availability)
             } header: {
-                Text("Account")
+                Text("Status")
             } footer: {
-                Text("Your key is stored in the macOS Keychain, never in a file.").font(.footnote).foregroundStyle(.secondary)
-            }
-            Section("Model") {
-                Picker("Model", selection: $settings.aiModel) {
-                    ForEach(AIService.models, id: \.id) { Text($0.name).tag($0.id) }
-                }
-                Picker("Effort", selection: $settings.aiEffort) {
-                    ForEach(AIService.efforts, id: \.self) { Text($0.capitalized).tag($0) }
-                }
-                .pickerStyle(.segmented)
-                HStack {
-                    Button("Test Connection", action: test).disabled(key.isEmpty || status == .testing)
-                    statusView
-                }
-            }
-            Section {
-                Text("AI commands only send the text you select (or type) and only when you run them. Nothing is sent in the background.")
-                    .font(.callout).foregroundStyle(.secondary)
+                Text("Glink's AI runs entirely on this Mac with Apple's Foundation Models. Nothing you ask or select is ever sent anywhere. Requires macOS 26, Apple silicon and Apple Intelligence.")
+                    .font(.footnote).foregroundStyle(.secondary)
             }
         }
         .formStyle(.grouped)
-        .motion(Motion.bouncy, value: status)
-        .motion(Motion.smooth, value: saved)
-    }
-
-    @ViewBuilder
-    private var statusView: some View {
-        switch status {
-        case .idle: EmptyView()
-        case .testing: ProgressView().controlSize(.small)
-        case .success:
-            Label("Connected", systemImage: "checkmark.circle.fill")
-                .foregroundStyle(.green)
-                .symbolEffect(.bounce, value: status)
-        case .failure(let message):
-            Label(message, systemImage: "xmark.octagon.fill").foregroundStyle(.red).lineLimit(2)
-        }
-    }
-
-    private func save() {
-        Keychain.write(key.trimmingCharacters(in: .whitespacesAndNewlines), account: AIService.keychainAccount)
-        saved = true
-        DispatchQueue.main.asyncAfter(deadline: .now() + 2) { saved = false }
-    }
-
-    private func test() {
-        save()
-        status = .testing
-        Task {
-            do {
-                try await AIService.shared.testConnection(key: key.trimmingCharacters(in: .whitespacesAndNewlines), model: settings.aiModel)
-                status = .success
-            } catch {
-                status = .failure(error.localizedDescription)
-            }
-        }
+        .onAppear { availability = AIService.availability }
     }
 }
 
@@ -545,12 +503,12 @@ struct PrivacySettingsPane: View {
                 row("doc.on.clipboard", "Clipboard history", "Text, links, images and file references you copy. Stored only on this Mac.")
                 row("text.quote", "Snippets & quicklinks", "The ones you create.")
                 row("chart.bar", "Usage counts", "How often you open each result, so favorites rank higher.")
-                row("key", "AI API key", "In the macOS Keychain.")
             }
             Section("What Glink never stores") {
                 row("keyboard", "Keystrokes", "The snippet expander keeps only the last few characters in memory to spot keywords. Nothing is logged.")
                 row("lock", "Password-manager items", "Clipboard entries marked as concealed are skipped.")
                 row("antenna.radiowaves.left.and.right", "Analytics", "Glink sends no analytics or telemetry.")
+                row("sparkles", "AI prompts", "AI runs on-device with Apple's Foundation Models. Nothing is sent off this Mac.")
             }
             Section {
                 Button("Reveal Data Folder in Finder") {
