@@ -141,7 +141,8 @@ struct StaggerIn: ViewModifier {
 /// not the whole list. (SearchItem holds action closures, which SwiftUI can't compare on its own.)
 struct ResultRow: View, Equatable {
     nonisolated static func == (a: ResultRow, b: ResultRow) -> Bool {
-        a.item == b.item && a.item.accessory == b.item.accessory && a.isSelected == b.isSelected
+        a.item == b.item && a.item.accessory == b.item.accessory && a.item.subtitleHighlight == b.item.subtitleHighlight
+            && a.isSelected == b.isSelected
             && a.shortcutIndex == b.shortcutIndex && a.showsAccessory == b.showsAccessory
             && a.namespace == b.namespace && a.thumbnailNamespace == b.thumbnailNamespace
     }
@@ -165,7 +166,7 @@ struct ResultRow: View, Equatable {
                     .font(Typography.rowTitle(scale))
                     .lineLimit(1)
                 if let subtitle = item.subtitle, !subtitle.isEmpty {
-                    Text(subtitle)
+                    Text(Self.highlighted(subtitle, item.subtitleHighlight))
                         .font(Typography.rowSubtitle(scale))
                         .foregroundStyle(.secondary)
                         .lineLimit(1)
@@ -204,8 +205,24 @@ struct ResultRow: View, Equatable {
         }
     }
 
+    static func highlighted(_ text: String, _ word: String?) -> AttributedString {
+        var s = AttributedString(text)
+        if let word, !word.isEmpty, let r = s.range(of: word, options: .caseInsensitive) {
+            s[r].foregroundColor = .primary
+            s[r].inlinePresentationIntent = .stronglyEmphasized
+        }
+        return s
+    }
+
     @ViewBuilder
     private var accessory: some View {
+        if item.matchedByMeaning && shortcutIndex == nil {
+            Image(systemName: "sparkle.magnifyingglass")
+                .font(.system(size: 11))
+                .foregroundStyle(.purple)
+                .help("Matched by meaning")
+                .accessibilityLabel("Matched by meaning")
+        }
         if let n = shortcutIndex {
             Keycap(text: "⌘\(n)", prominent: isSelected)
                 .transition(.scale(scale: 0.7).combined(with: .opacity))

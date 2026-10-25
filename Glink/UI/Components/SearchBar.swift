@@ -52,7 +52,9 @@ struct SearchBar: View {
         .onAppear { focused = true }
         .onChange(of: model.openCount) { focused = model.focus == .search }
         .onChange(of: model.focus) { focused = model.focus == .search }
-        .onChange(of: model.route) { focused = true }
+        .onChange(of: model.route) {
+            if case .mcpTool = model.route { focused = false } else { focused = true }
+        }
     }
 
     @ViewBuilder

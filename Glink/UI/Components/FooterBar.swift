@@ -20,6 +20,11 @@ struct FooterBar: View {
             }
             .frame(maxWidth: .infinity, alignment: .leading)
 
+            if SemanticIndexer.shared.isIndexing {
+                IndexingRing(progress: SemanticIndexer.shared.progress, paused: SemanticIndexer.shared.isPausedForConditions)
+                    .transition(.scale.combined(with: .opacity))
+            }
+
             if let primary = model.currentActions.first {
                 Button { model.handleKeyEquivalentPrimary() } label: {
                     KeyHintLabel(title: primary.title, keys: ["↵"])
@@ -125,5 +130,25 @@ struct ToastView: View {
         case .progress:
             ProgressView().controlSize(.mini)
         }
+    }
+}
+
+/// Subtle ring in the footer while semantic indexing runs.
+struct IndexingRing: View {
+    let progress: Double
+    let paused: Bool
+
+    var body: some View {
+        ZStack {
+            Circle().stroke(Color.primary.opacity(0.12), lineWidth: 2)
+            Circle().trim(from: 0, to: max(0.03, progress))
+                .stroke(paused ? Color.secondary : Color.accentColor, style: StrokeStyle(lineWidth: 2, lineCap: .round))
+                .rotationEffect(.degrees(-90))
+        }
+        .frame(width: 13, height: 13)
+        .animation(Motion.resolved(Motion.smooth), value: progress)
+        .help(paused ? "Indexing paused" : "Indexing files for search by meaning… \(Int(progress * 100))%")
+        .accessibilityElement()
+        .accessibilityLabel(paused ? "Indexing paused" : "Indexing \(Int(progress * 100)) percent")
     }
 }

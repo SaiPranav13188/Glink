@@ -26,6 +26,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
 
         PanelController.shared.setUp()
         _ = Updater.shared
+        if !DataStore.isEphemeral {
+            MCPClientManager.shared.connectEnabledServers()
+            SemanticIndexer.shared.start()
+        }
         if !DataStore.isEphemeral { ClipboardMonitor.shared.start() }
         TextExpander.shared.startIfPossible()
 
@@ -46,6 +50,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         handleDemoArguments()
         if ProcessInfo.processInfo.arguments.contains("--benchmark") { Benchmark.run() }
         if ProcessInfo.processInfo.arguments.contains("--animation-benchmark") { Benchmark.runAnimationScript() }
+        if ProcessInfo.processInfo.arguments.contains("--mcp-selftest") { MCPSelfTest.run() }
+        if ProcessInfo.processInfo.arguments.contains("--semantic-selftest") { SemanticSelfTest.run() }
     }
 
     /// `Glink --open [query]` opens the panel at launch (handy for screenshots and UI tests).
@@ -75,6 +81,11 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
                 }
             }
         }
+    }
+
+    /// MCP server processes never outlive Glink.
+    func applicationWillTerminate(_ notification: Notification) {
+        MCPClientManager.shared.disconnectAll()
     }
 
     /// Opening Glink again from Finder or Spotlight shows the panel.

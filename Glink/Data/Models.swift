@@ -141,7 +141,9 @@ final class DataStore {
     var context: ModelContext { container.mainContext }
 
     private init() {
-        let schema = Schema([ClipboardEntry.self, Snippet.self, Quicklink.self, UsageRecord.self])
+        let schema = Schema([ClipboardEntry.self, Snippet.self, Quicklink.self, UsageRecord.self,
+                             MCPServerEntry.self, MCPToolPreference.self, MCPAuditRecord.self,
+                             UsageEvent.self, SemanticChunk.self])
         let dir = URL.applicationSupportDirectory.appending(path: "Glink", directoryHint: .isDirectory)
         if !Self.isEphemeral { try? FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true) }
         // `--ephemeral` (UI tests, benchmarks) keeps everything in memory so runs never touch real data.

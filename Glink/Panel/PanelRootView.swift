@@ -104,6 +104,10 @@ struct PanelRootView: View {
                 AIResponseView(model: model).transition(routeTransition(forward: true))
             case .mcpCheck:
                 MCPCheckView(model: model).transition(routeTransition(forward: true))
+            case .mcpTool:
+                MCPToolView(run: model.mcpTool).transition(routeTransition(forward: true))
+            case .mcpActivity:
+                MCPActivityView(model: model).transition(routeTransition(forward: true))
             case .recentActions:
                 RecentActionsView(model: model).transition(routeTransition(forward: true))
             case .scriptOutput(let output):

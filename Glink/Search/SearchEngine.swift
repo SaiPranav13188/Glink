@@ -85,7 +85,13 @@ final class SearchEngine {
             if abs($0.best - $1.best) > 0.05 { return $0.best > $1.best }
             return $0.order < $1.order
         }
-        let result = sections.map(\.section)
+        // The same file can match by name and by meaning: keep the first (name) row only.
+        var seen = Set<String>()
+        let result = sections.map(\.section).compactMap { section -> ResultSection? in
+            var s = section
+            s.items = s.items.filter { seen.insert($0.id).inserted }
+            return s.items.isEmpty ? nil : s
+        }
         if result.isEmpty && !pending {
             return SearchSnapshot(sections: [fallbackSection(for: query)], pendingSlowProviders: false, isFallback: true)
         }
@@ -96,8 +102,17 @@ final class SearchEngine {
 
     private func emptyQuerySections() -> [ResultSection] {
         var seen = Set<String>()
+        // Context-aware suggestions, each with a reason under it.
+        var suggested: [SearchItem] = []
+        for s in SuggestionsEngine.suggestions(frontmostApp: PanelController.shared.previousApp?.localizedName) {
+            guard let item = providers.lazy.compactMap({ $0.item(withID: s.itemID) }).first else { continue }
+            var row = item
+            row.subtitle = s.reason
+            suggested.append(row)
+            seen.insert(s.itemID)
+        }
         var recent: [SearchItem] = []
-        for id in ranking.recentIDs(limit: 12) {
+        for id in ranking.recentIDs(limit: 12) where !seen.contains(id) {
             guard recent.count < 5 else { break }
             for provider in providers {
                 if let item = provider.item(withID: id) {
@@ -115,8 +130,9 @@ final class SearchEngine {
             }
         }
         var sections: [ResultSection] = []
+        if !suggested.isEmpty { sections.append(ResultSection(id: "suggested", title: "Suggested", items: suggested)) }
         if !recent.isEmpty { sections.append(ResultSection(id: "recent", title: "Recent", items: recent)) }
-        sections.append(ResultSection(id: "suggestions", title: "Suggestions", items: suggestions))
+        sections.append(ResultSection(id: "suggestions", title: suggested.isEmpty ? "Suggestions" : "Quick Actions", items: suggestions))
         return sections
     }
 

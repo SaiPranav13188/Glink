@@ -3,7 +3,7 @@ import Observation
 import SwiftUI
 
 enum SettingsPane: String, CaseIterable, Identifiable {
-    case general, appearance, clipboard, snippets, quicklinks, ai, privacy, advanced, about
+    case general, appearance, clipboard, snippets, quicklinks, ai, mcpServers, search, privacy, advanced, about
 
     var id: String { rawValue }
 
@@ -15,6 +15,8 @@ enum SettingsPane: String, CaseIterable, Identifiable {
         case .snippets: "Snippets"
         case .quicklinks: "Quicklinks"
         case .ai: "AI"
+        case .mcpServers: "MCP Servers"
+        case .search: "Search & Suggestions"
         case .privacy: "Privacy"
         case .advanced: "Advanced"
         case .about: "About"
@@ -29,6 +31,8 @@ enum SettingsPane: String, CaseIterable, Identifiable {
         case .snippets: "text.quote"
         case .quicklinks: "link"
         case .ai: "sparkles"
+        case .mcpServers: "server.rack"
+        case .search: "text.magnifyingglass"
         case .privacy: "hand.raised"
         case .advanced: "wrench.and.screwdriver"
         case .about: "info.circle"
@@ -43,6 +47,8 @@ enum SettingsPane: String, CaseIterable, Identifiable {
         case .snippets: .pink
         case .quicklinks: .teal
         case .ai: .purple
+        case .mcpServers: .green
+        case .search: .orange
         case .privacy: .indigo
         case .advanced: .gray
         case .about: .blue
@@ -139,6 +145,8 @@ struct SettingsView: View {
         case .snippets: SnippetsSettingsPane(navigation: navigation)
         case .quicklinks: QuicklinksSettingsPane(navigation: navigation)
         case .ai: AISettingsPane()
+        case .mcpServers: MCPServersSettingsPane()
+        case .search: SearchSettingsPane()
         case .privacy: PrivacySettingsPane()
         case .advanced: AdvancedSettingsPane()
         case .about: AboutPane()

@@ -18,6 +18,9 @@ packages:
   Sparkle:
     url: https://github.com/sparkle-project/Sparkle
     from: 2.9.0
+  MCPSwiftSDK:
+    url: https://github.com/modelcontextprotocol/swift-sdk
+    from: 0.12.1
   MCPShieldCore:
     path: Packages/MCPShieldCore
 targets:
@@ -43,6 +46,8 @@ targets:
       - package: MCPShieldCore
       - package: KeyboardShortcuts
       - package: Sparkle
+      - package: MCPSwiftSDK
+        product: MCP
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.saipranav.glink

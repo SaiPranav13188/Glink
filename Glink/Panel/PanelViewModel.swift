@@ -54,6 +54,7 @@ final class PanelViewModel {
     let ai = AIConversationModel()
     let mcp = MCPCheckModel()
     let snippets = SnippetsRouteModel()
+    let mcpTool = MCPToolRunModel()
 
     /// How this model closes its container (the panel by default; the menu bar popover in mini mode).
     @ObservationIgnored var onDismiss: @MainActor () -> Void = { PanelController.shared.hide() }
@@ -71,7 +72,8 @@ final class PanelViewModel {
         appProvider = apps
         engine = SearchEngine(providers: [
             CalculatorProvider(), apps, SystemCommandProvider(), QuicklinkProvider(), WindowCommandProvider(),
-            AIProvider(), MCPCheckProvider(), SnippetProvider(), ScriptCommandProvider(), ClipboardProvider(), FileProvider(),
+            AIProvider(), MCPCheckProvider(), SnippetProvider(), ScriptCommandProvider(), MCPToolProvider(), MCPActivityProvider(),
+            ClipboardProvider(), FileProvider(), SemanticProvider(),
         ])
     }
 
@@ -85,6 +87,8 @@ final class PanelViewModel {
         case .snippets: return snippets.sections(query: query)
         case .scriptOutput: return []
         case .recentActions: return UndoCenter.shared.sections(query: query)
+        case .mcpTool: return []
+        case .mcpActivity: return MCPActivity.sections(query: query)
         case .mcpCheck: return mcp.sections(query: query)
         case .ai: return []
         }
@@ -106,6 +110,8 @@ final class PanelViewModel {
     var currentActions: [ItemAction] {
         if case .ai = route { return ai.actions }
         if case .scriptOutput(let output) = route { return ScriptActions.outputActions(output) }
+        if case .mcpTool = route { return mcpTool.actions }
+        if case .mcpActivity = route, flatItems.isEmpty { return MCPActivity.exportActions() }
         if case .mcpCheck = route, flatItems.isEmpty { return mcp.globalActions }
         if let argumentItem { return argumentItem.actions.isEmpty ? [] : [argumentRunAction(argumentItem)] }
         return selectedItem?.actions ?? []
@@ -155,6 +161,7 @@ final class PanelViewModel {
 
     private func queryDidChange() {
         selectionSource = .keyboard
+        SemanticIndexer.shared.lastKeystroke = Date()
         switch route {
         case nil where argumentItem == nil:
             runSearch(animated: true)
@@ -243,6 +250,7 @@ final class PanelViewModel {
     func run(_ action: ItemAction, for item: SearchItem?) {
         if let item, ![ItemKind.calculator, .web].contains(item.kind), !item.id.hasPrefix("fallback"), route == nil {
             RankingStore.shared.recordUse(of: item.id)
+            SuggestionsEngine.record(itemID: item.id, frontmostApp: PanelController.shared.previousApp?.localizedName)
         }
         Mascots.shared.countAction()
         actionsPresented = false
@@ -288,7 +296,8 @@ final class PanelViewModel {
         case .mcpCheck: mcp.scanIfNeeded()
         case .clipboard: clipboard.refresh()
         case .snippets: snippets.refresh()
-        case .scriptOutput, .recentActions: break
+        case .scriptOutput, .recentActions, .mcpActivity: break
+        case .mcpTool(let tool): mcpTool.start(tool)
         }
         selectedID = flatItems.first?.id
     }
@@ -430,6 +439,31 @@ final class PanelViewModel {
         }
 
         if actionsPresented { return handleActionsKey(event, mods: mods, code: code) }
+
+        // The tool form owns its fields: Tab and arrows move between them; ↵ runs; the permission sheet decides.
+        if case .mcpTool = route {
+            if let _ = mcpTool.permission {
+                switch code {
+                case kVK_Escape: mcpTool.deny(); return true
+                case kVK_Return, kVK_ANSI_KeypadEnter: mcpTool.allowOnce(); return true
+                default: return true
+                }
+            }
+            switch code {
+            case kVK_Escape: pop(); return true
+            case kVK_Return where mods.isEmpty, kVK_ANSI_KeypadEnter where mods.isEmpty:
+                if let editor = PanelController.shared.panel.firstResponder as? NSTextView,
+                   editor.string.contains("\n") || mods.contains(.shift) { return false }
+                mcpTool.submit()
+                return true
+            default:
+                if !mods.isEmpty, let action = currentActions.first(where: { $0.shortcut?.matches(event) == true }) {
+                    run(action, for: nil)
+                    return true
+                }
+                return false
+            }
+        }
 
         switch code {
         case kVK_Escape:

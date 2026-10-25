@@ -10,6 +10,7 @@ let package = Package(
     dependencies: [
         .package(url: "https://github.com/sindresorhus/KeyboardShortcuts", from: "2.0.0"),
         .package(url: "https://github.com/sparkle-project/Sparkle", from: "2.9.0"),
+        .package(url: "https://github.com/modelcontextprotocol/swift-sdk", from: "0.12.1"),
         // Tollgate's MCP rules engine, vendored (rules, scoring, redaction, eval set).
         .package(path: "Packages/MCPShieldCore"),
     ],
@@ -27,6 +28,7 @@ let package = Package(
                 .product(name: "MCPShieldCore", package: "MCPShieldCore"),
                 .product(name: "KeyboardShortcuts", package: "KeyboardShortcuts"),
                 .product(name: "Sparkle", package: "Sparkle"),
+                .product(name: "MCP", package: "swift-sdk"),
             ],
             path: "Glink",
             exclude: ["Resources/Info.plist", "Resources/AppIcon.icns"],

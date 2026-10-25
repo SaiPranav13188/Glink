@@ -145,6 +145,10 @@ struct SearchItem: Identifiable {
     var runWithArgument: (@MainActor (String) async -> ActionOutcome)?
     /// When true, ↵ enters argument mode instead of running (e.g. a quicklink with no query yet).
     var requiresArgument = false
+    /// A word inside the subtitle to emphasize (semantic matches).
+    var subtitleHighlight: String?
+    /// Found by meaning rather than by name; the row shows a small icon.
+    var matchedByMeaning = false
     /// Payload used by special row renderers (calculator).
     var calculation: CalculationPayload?
 
@@ -208,6 +212,8 @@ enum Route: Hashable {
     case snippets
     case scriptOutput(ScriptOutput)
     case recentActions
+    case mcpTool(MCPClientManager.ToolInfo)
+    case mcpActivity
 
     var title: String {
         switch self {
@@ -217,6 +223,8 @@ enum Route: Hashable {
         case .snippets: "Search Snippets"
         case .scriptOutput(let o): o.title
         case .recentActions: "Recent Actions"
+        case .mcpTool(let t): t.name
+        case .mcpActivity: "MCP Activity"
         }
     }
 
@@ -228,6 +236,8 @@ enum Route: Hashable {
         case .snippets: .symbol("text.quote", tint: .pink)
         case .scriptOutput: .symbol("terminal", tint: .gray)
         case .recentActions: .symbol("arrow.uturn.backward", tint: .blue)
+        case .mcpTool: .symbol("hammer.fill", tint: .orange)
+        case .mcpActivity: .symbol("list.bullet.rectangle", tint: .green)
         }
     }
 
@@ -239,6 +249,8 @@ enum Route: Hashable {
         case .snippets: "Search snippets…"
         case .scriptOutput: "Filter output…"
         case .recentActions: "Search recent actions…"
+        case .mcpTool: "Fill in the form below, then press ↵"
+        case .mcpActivity: "Search calls, or server:name…"
         }
     }
 }
