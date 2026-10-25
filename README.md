@@ -1,159 +1,176 @@
 # Glink
 
-A keyboard-first command bar for the Mac, built from scratch in Swift. Press **⌥ Space**, type a few letters, and launch apps, find files, do math, reuse your clipboard, snap windows, expand snippets, ask AI, or audit your MCP server configs. You never have to touch the mouse.
+**The private, secure AI launcher for Mac.**
 
-> macOS 14 Sonoma or later · Liquid Glass on macOS 26 · Swift 6 · SwiftUI + AppKit · SwiftData
+Press **⌥ Space**, type a few letters, and launch apps, find files by name *or by meaning*, do math, reuse your clipboard, snap windows, expand snippets, ask on-device AI, and run MCP tools safely. Everything runs on your Mac: no API keys, no cloud, no analytics.
+
+> Swift 6 · SwiftUI + AppKit · SwiftData · Apple Foundation Models · NaturalLanguage · Vision · MCP Swift SDK
+
+<!-- GIFs: record with `Glink --open "query"`, `--route clipboard|mcp`, `--ask "question"`, `--demo-permission`, `--mascot` -->
+| | |
+|---|---|
+| ![Launcher](docs/gifs/launcher.gif) | ![On-device AI](docs/gifs/ai.gif) |
+| *Launcher: apps, files, calculator* | *On-device AI, streamed* |
+| ![MCP security check](docs/gifs/mcp-check.gif) | ![Permission prompt](docs/gifs/permission.gif) |
+| *Check MCP Security: A–F grades* | *Permission before any write* |
+| ![Injection warning](docs/gifs/injection.gif) | ![Search by meaning](docs/gifs/semantic.gif) |
+| *Prompt-injection warning* | *“invoice from september” → scan_0042.pdf* |
+| ![Undo](docs/gifs/undo.gif) | ![Mascots](docs/gifs/mascots.gif) |
+| *⌘Z undo with countdown* | *A kitten or puppy now and then* |
 
 ## Features
 
-| | |
+**Launcher**
+- Fuzzy app search, Spotlight file search, a calculator with unit conversion, and ⌘K actions.
+- Clipboard history with image previews, window snapping with a preview overlay, snippets, quicklinks, and script commands.
+- Floating notes, menu bar mini mode, onboarding, and a full Settings window.
+
+**On-device AI** (Apple Foundation Models)
+- Ask AI, or type the question inline: "ask what is a closure in swift".
+- Rewrite selected text: more professional, shorter, or fix grammar.
+- Summarize the clipboard, or explain a selection.
+- Responses stream word by word with a caret and an **On-device · Private** badge.
+- On Macs that can't run the model, the commands are hidden and an inline card explains why.
+
+**Safe MCP**
+- **Check MCP Security** scans Claude Desktop, Claude Code, Cursor, VS Code, Windsurf, Zed, Gemini CLI and Continue configs.
+  - It uses Tollgate's rules engine plus Glink's own rules, giving each server an A–F grade with a fix for every finding.
+  - Secrets are masked to their first 4 characters.
+- **MCP client.** Connect stdio servers in Settings; their tools become commands, with forms generated from each tool's JSON schema.
+  - A server must pass the security check before it can be enabled. Grade D or F needs your confirmation.
+- **Permissions.** Tools are classified as read-only, network, writes, deletes, or runs commands.
+  - Anything that isn't read-only shows the exact arguments first: **Allow once / Always allow / Deny**.
+  - Denied calls never reach the server.
+- **MCP Activity:** every call is audited (secrets masked), searchable, filterable by `server:name`, and exportable as JSON.
+- **Prompt-injection detection** on every tool result, in two layers:
+  - fast pattern rules
+  - an on-device model check for flagged results and untrusted servers
+
+  Flagged results show a warning with the suspicious text highlighted, and never reach the AI without your OK.
+
+**Search by meaning**
+- Indexes text, Markdown, PDFs (scans via Vision OCR), Word, RTF and screenshots in folders you choose.
+- Uses on-device NaturalLanguage embeddings with hybrid ranking, so exact name matches still win.
+- Watches the folders for changes, and pauses while you type or on low battery.
+
+**Context-aware suggestions**
+- The empty search field shows **Suggested** items, each with a reason: "You usually open this around 10 am", "Often used with Xcode".
+
+**Undo & previews**
+- ⌘Z undoes window snaps, files moved to Trash, clipboard changes, snippet expansions and AI rewrites, with a 5-second undo toast.
+- **Recent Actions** lists the last 20.
+- Destructive actions preview exactly what will change.
+
+**Playful touches**
+- Now and then a kitten 🐱, a puppy 🐶 or a trending friend (🦫 🦦 🦆 🐸 🐹 🐼) peeks out to celebrate.
+- Seasonal guests visit too: 👻 🎃 at Halloween, 🪔 at Diwali, ❄️ in December.
+- They never block input, skip Reduce Motion, and can be turned off in Settings › Appearance.
+
+## System requirements
+
+| Feature | Needs |
 |---|---|
-| **Command panel** | Floating, non-activating glass panel. It opens on the screen under the mouse, about 20% from the top, and grows or shrinks with its results. |
-| **App search** | Fuzzy matching (`xc` → Xcode, `vsc` → Visual Studio Code) with matched letters highlighted and real app icons. |
-| **File search** | Spotlight index (`NSMetadataQuery`). File results stream in after the instant results, and each keystroke cancels the previous query. |
-| **Calculator** | Inline math (`2^10`, `20% of 150`, `sqrt(16)+1`, `5!`) and unit conversion (`10 km to mi`, `72f in c`, `1.5 gb as mb`). The digits roll as the answer changes. |
-| **Actions (⌘K)** | Open, Show in Finder, Quick Look (⌘Y), Copy Path, Move to Trash, Quit App… with a searchable list and keyboard shortcuts. |
-| **Clipboard history** | Text, links, colors, images and files. Pin, delete, and paste into any app. Password-manager items and apps you exclude are skipped. Image previews zoom out of their row thumbnails. |
-| **Window management** | Halves, thirds, quarters, maximize, center, next display. A preview outline glides to the target before the window moves. |
-| **Snippets** | Type a keyword like `;date` in any app to expand it. Supports `{date}`, `{date:yyyy-MM-dd}`, `{time}`, `{clipboard}`, `{uuid}` and `{cursor}`. |
-| **Quicklinks** | `gh apple/swift` opens GitHub; select a quicklink and press **Tab** to type its query. |
-| **Ranking** | Frequently and recently used items rise to the top; a **Recent** section appears on an empty query. |
-| **AI commands** | Ask AI, Summarize, Rewrite, Explain, Fix Grammar, Make Shorter. These work on the selected text, or on the clipboard as a fallback. Responses stream in word by word with a caret. Uses your own Anthropic API key, stored in the Keychain. |
-| **MCP Config Check** | Runs **Tollgate's rules engine** (vendored in `Packages/MCPShieldCore`, with its labelled eval set) on every MCP server Glink finds: Claude Desktop, Claude Code (and its projects), Cursor, VS Code, Windsurf, Zed, Gemini CLI, Continue, plus anything added with **Add Config…**. Each server gets a 0–100 score and a grade (Good, Needs work, At risk), with a fix for every finding. Secrets are always redacted. Glink adds six rules Tollgate doesn't cover (GLK-001…006: `sudo`, privileged Docker or the Docker socket, auto-approved tools, `trust: true`, programs in temporary folders, world-readable configs that hold secrets). Copy the report as Markdown or export Tollgate's JSON. |
-| **Script commands** (v2) | Executable scripts in `~/Library/Application Support/Glink/Scripts` become commands. Set them up with `# @glink.title`, `mode` (silent, compact or fullOutput), `icon` and `argument1` comments; Raycast's `@raycast.*` keys work too. "Open Script Commands Folder" creates two examples. |
-| **Floating notes** (v2) | An always-on-top glass notes window that autosaves to `Notes.md`. |
-| **Menu bar mini mode** (v2) | Turn it on in Settings › General › Extras: clicking the menu bar icon then opens a compact search popover, and right-clicking still shows the menu. |
-| **Auto-updates** | Sparkle 2 with EdDSA-signed updates and gentle reminders (a found update doesn't steal focus). Only copies installed in an Applications folder check for updates. |
-| **Onboarding & Settings** | A 4-step animated welcome (hotkey recorder with a live keyboard, permission cards, "try it"). Settings has General, Appearance (with a live preview), Clipboard, Snippets, Quicklinks, AI, Privacy, Advanced and About. |
+| Glink | macOS 14 Sonoma or later |
+| On-device AI and the AI layer of injection detection | macOS 26, Apple silicon, Apple Intelligence turned on |
+| MCP servers via `npx` / `uvx` | Node.js / uv installed (Homebrew paths are picked up automatically) |
 
-## Build & run
+## Install (free release)
 
-### SwiftPM (no Xcode project needed)
+1. Download `Glink.zip` from [Releases](https://github.com/SaiPranav13188/Glink/releases) and unzip it.
+2. Move **Glink.app** to **Applications** and open it.
+3. macOS will say it can't verify the developer, because free builds aren't notarized. Click **Done**, then open **System Settings → Privacy & Security** and click **Open Anyway** next to the Glink message. Confirm with **Open**.
+4. Follow the welcome tour. Press **⌥ Space** anytime.
 
-```sh
-scripts/build-app.sh          # → build/Glink.app (ad-hoc signed)
-open build/Glink.app
-swift test                    # 28 unit tests (Swift Testing)
+## Permissions (and why)
+
+| Permission | Why | When it's asked |
+|---|---|---|
+| **Accessibility** | Snapping windows, pasting into the frontmost app, reading selected text for AI, snippet expansion (keystrokes stay in memory and are never logged) | When you first use one of those features |
+| **Files & Folders** (Documents, Desktop, Downloads) | Search by meaning reads the folders you pick | Only after you turn on search by meaning |
+| **Automation → System Events** | Only the "Toggle System Appearance" command | When you run it |
+
+Every permission is optional; features that need one explain why and offer a button.
+
+## Privacy
+
+- **AI** runs on-device with Apple's Foundation Models. Nothing you ask or select is sent anywhere.
+- **The search index, clipboard history, snippets, usage data and the MCP audit log** live in `~/Library/Application Support/Glink`. Clear or pause them in Settings.
+- **MCP:** Glink starts only the servers you enable, shows every non-read-only call before it runs, and logs calls with secrets masked.
+- **No analytics, no telemetry.** The only network traffic is what your own MCP servers and quicklinks do, plus update checks for notarized builds.
+
+## Architecture
+
+```mermaid
+flowchart LR
+    HK[Hotkey] --> PC[PanelController<br/>NSPanel]
+    PC --> VM[PanelViewModel]
+    VM --> SE[SearchEngine]
+    SE --> P1[Apps · Commands · Calculator · Quicklinks<br/>Window · Snippets · Scripts · Clipboard · MCP tools]
+    SE --> P2[Files · By meaning]
+    VM --> AI[On-device AI<br/>Foundation Models]
+    VM --> MCP[MCP client<br/>Swift SDK]
+    MCP --> SAFE[Risk · Permissions · Audit · Injection]
+    P2 --> IDX[Indexer<br/>NLEmbedding · Vision · FSEvents]
+    VM --> UNDO[UndoCenter]
 ```
 
-`UNIVERSAL=1` builds arm64 + x86_64. `SIGN_IDENTITY="Developer ID Application: …"` signs with hardened runtime.
+The pure logic (fuzzy matching, calculator, MCP rules, injection detection, risk classification, forms, chunking and vector ranking, suggestion scoring, the undo log) lives in `GlinkCore` and is unit-tested. See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) for the full map.
 
-### Xcode
+## Quality
 
-The project is generated from `project.yml` with [XcodeGen](https://github.com/yonaskolb/XcodeGen):
+**Injection detection, layer 1** (`swift test`, labelled set in `Tests/GlinkCoreTests/Fixtures/injection`):
 
-```sh
-brew install xcodegen   # once
-xcodegen generate
-open Glink.xcodeproj    # scheme "Glink": app, unit tests, UI tests
-```
+| Samples | Detection rate | False-positive rate |
+|---|---|---|
+| 30 (15 injected, 15 clean) | **100%** (15/15) | **0%** (0/15) |
 
-### Launch arguments (demos, screenshots, UI tests)
+The set covers overrides, role changes, system-prompt probing, hidden HTML comments, exfiltration URLs, tool-call requests, secrecy requests, credential requests, fake chat markers, invisible Unicode tags, zero-width characters and base64 payloads. The clean samples include near-misses: security docs, prompt-writing tips, HTML comments and long hashes. The rules were tuned on this set, so treat it as a regression suite. A held-out set is the next step for an unbiased number.
 
-```sh
-build/Glink.app/Contents/MacOS/Glink --open "10 km to mi"
-build/Glink.app/Contents/MacOS/Glink --route clipboard   # or: mcp, snippets
-```
+**Tests:**
+- `swift test`: 71 Glink tests (AI engine with a mock model, MCP rules per fixture, risk classifier, permissions, forms, injection, chunking and ranking, suggestions, undo, calculator, fuzzy matcher).
+- `cd Packages/MCPShieldCore && swift test`: Tollgate's 45 tests, including its precision/recall eval.
+- Xcode UI tests drive the real panel and run `performAccessibilityAudit()` on four panel states.
 
-## Permissions
+**Performance** (release build, `Glink --ephemeral --benchmark`):
 
-Everything works without permissions except the features below. Each one asks only when you use it, with an inline card explaining why.
-
-| Permission | Used for |
+| Metric | Measured |
 |---|---|
-| **Accessibility** | Window snapping, pasting into the frontmost app, reading selected text for AI, and snippet expansion (listen-only event tap). |
-| **Automation → System Events** | Only the "Toggle System Appearance" command. |
+| Panel open | ~12 ms |
+| Keystroke → results | < 2 ms |
+| Search 10,000 chunks by meaning | ~40 ms |
+| Idle memory | ~26 MB |
+| Idle CPU | 0% |
 
-> **Ad-hoc builds:** macOS ties Accessibility trust to the code signature. After rebuilding an ad-hoc signed app, remove Glink from *Privacy & Security → Accessibility* and add it again, or sign with a Developer ID identity.
+**Self-tests:**
+- `Glink --ephemeral --mcp-selftest` connects to the real filesystem MCP server, checks tool risks and permissions, and plants an injection.
+- `Glink --ephemeral --semantic-selftest` indexes a scanned invoice PDF and a screenshot, then searches for them by meaning.
+
+## Build from source
+
+```sh
+scripts/build-app.sh      # → build/Glink.app (ad-hoc signed)
+swift test                # unit tests
+scripts/release.sh        # tests + universal build → build/Glink.zip for a GitHub Release
+```
+
+For Xcode, run `brew install xcodegen && xcodegen generate && open Glink.xcodeproj`.
+
+For notarized builds with Sparkle auto-updates (requires the $99/year Apple Developer Program), see `scripts/make-dmg.sh`.
 
 ## Keyboard
 
 | Key | Action |
 |---|---|
-| ⌥ Space | Toggle panel (configurable) |
-| ↑ ↓ / ⌃N ⌃P | Move selection · ⌘↑ ⌘↓ jump to first/last |
-| ↵ | Run primary action |
-| ⌘K | Actions for the selected item |
-| ⌘1–9 | Run result 1–9 (hold ⌘ to see badges) |
-| Tab | Enter a command's argument, or autocomplete |
-| Esc | Clear text → leave argument → go back → close |
-| ⌫ on empty field | Leave argument / go back |
+| ⌥ Space | Toggle Glink |
+| ↑ ↓ | Move selection |
+| ↵ | Run |
+| ⌘K | Actions |
+| ⌘1–9 | Run result 1–9 |
+| Tab | Enter a command's argument / autocomplete |
+| Esc | Clear → back → close |
+| ⌘Z (empty field) | Undo Glink's last action |
 | ⌘, | Settings |
-
-## Architecture
-
-```
-Hotkey ─► PanelController ─► CommandPanel (NSPanel, pre-built & hidden)
-                                   │
-                         PanelRootView (SwiftUI) ◄── PanelViewModel (@Observable)
-                                                          │
-                                   SearchEngine ──► [SearchProvider] (all run on every keystroke)
-                                                     Calculator · Apps · Commands · Quicklinks
-                                                     Window · AI · MCP · Snippets · Clipboard
-                                                     Files (slow → streams in last)
-```
-
-- **`GlinkCore/`**: pure logic with no AppKit, unit-tested: fuzzy matcher (DP alignment with word-boundary/camelCase bonuses), calculator & unit converter, snippet expander/trigger, ranking score, and the MCP rules engine.
-- **`Glink/Panel/`**: the panel window, controller, view model, and the sub-screen models (clipboard, AI, MCP, snippets).
-- **`Glink/Providers/`**: one file per result source, all behind the `SearchProvider` protocol.
-- **`Glink/System/`**: clipboard monitor, AX window manager + snap preview, CGEventTap text expander, Keychain, AI streaming client, permissions.
-- **`Glink/UI/DesignSystem/`**: `Motion.swift` (every animation token), `Theme.swift`, `Typography.swift`.
-
-### Motion
-
-All animation goes through `Motion` tokens (`snappy`, `smooth`, `bouncy`, `gentle`, `panelIn`, `panelOut`). Model state changes plainly, and views declare their animations with `.motion(_:value:)`. This honors **Reduce Motion** and the in-app *Animation level* (Full / Reduced / Off); Reduced swaps movement for short cross-fades. Nothing in the panel runs longer than 350 ms, and typing never waits for an animation.
-
-Highlights: a spring entrance and quick exit, a selection highlight that slides between rows (`matchedGeometryEffect`), a first-open row cascade, an animated panel height, the ⌘K sheet sliding up while the list dims, rolling calculator digits, toasts that bounce in, the magnifier morphing into a spinner while files load, a shimmer skeleton (only after 120 ms), a shake on invalid input, AI text streaming with a caret, a window-snap preview, clipboard image zoom, onboarding push transitions, permission cards that turn green with a drawn checkmark, and trackpad haptics at list ends and on snaps.
-
-## Testing
-
-- `swift test` runs 28 Swift Testing unit tests (matcher, calculator and units, snippets, ranking, MCP discovery and Glink rules).
-- `cd Packages/MCPShieldCore && swift test` runs Tollgate's 45 tests, including the precision/recall eval.
-- `GlinkUITests` (Xcode, scheme **Glink**) drives the real panel. It checks suggestions, app search, the calculator, no-results fallbacks, arrow-key selection, ⌘K actions, Clipboard History and back, Esc behavior, script commands and floating notes. It also runs `performAccessibilityAudit()` on the root panel, the ⌘K menu, MCP Config Check and Clipboard History. UI tests launch Glink with `--ephemeral` (an in-memory store with no clipboard capture), so they never touch your real data. They need an unlocked session; macOS asks once for Touch ID or your password to enable UI automation.
-
-## Performance
-
-Measured on the release build with `Glink --ephemeral --benchmark`:
-
-| Budget | Target | Measured |
-|---|---|---|
-| Hotkey → panel drawn | < 50 ms | 11.5 ms median (16 ms max) |
-| Keystroke → results | < 30 ms | 0.4–1.6 ms median (files stream in after) |
-| Cold launch | < 1 s | ~760 ms |
-| Idle memory (footprint) | < 80 MB | 26 MB idle, 42–52 MB in use |
-| Idle CPU | ~0% | 0.0–0.1% |
-
-`Glink --animation-benchmark` drives the panel like a person would (open, type, arrow keys, ⌘K, close) for Instruments' **Animation Hitches** and **Time Profiler** templates. The work done for this:
-
-- The open/close spring runs as a Core Animation spring on the hosting layer, not as SwiftUI state.
-- Result lists are lazy, and rows are `Equatable`, so moving the selection re-renders only two rows.
-- The list doesn't animate while the panel is springing in.
-- The panel's shadow is cast by a plain shape instead of a compositing group.
-- App search builds full results only for the best matches.
-
-On a busy development machine, the script logged 18 hitches with animations on and 13 with them off. Most are therefore environmental; re-measure on a quiet Mac before claiming zero.
-
-## Release
-
-```sh
-SIGN_IDENTITY="Developer ID Application: Your Name (TEAMID)" \
-NOTARY_PROFILE="glink-notary" scripts/make-dmg.sh
-```
-
-This builds a universal app, signs it with hardened runtime, creates the DMG, notarizes and staples it. It requires an Apple Developer Program membership. Glink ships outside the Mac App Store because the Accessibility API and event taps don't work in the sandbox.
-
-## Privacy
-
-All data stays on your Mac: clipboard history, snippets and usage counts are in `~/Library/Application Support/Glink`, and the API key is in the Keychain. There are no analytics. The snippet expander keeps only the last 64 typed characters in memory and never logs them. AI requests send only the text you select or type, and only when you run an AI command.
-
-## Release checklist
-
-1. Create the GitHub repo `SaiPranav13188/Glink`. The update feed URL in `Info.plist` points at its latest release.
-2. Bump `CFBundleShortVersionString` and `CFBundleVersion` in `Glink/Resources/Info.plist`.
-3. Run `SIGN_IDENTITY=… NOTARY_PROFILE=… scripts/make-dmg.sh`. It builds, signs, notarizes and staples, writes `appcast.xml`, and prints the `gh release create` command to publish.
-
-The Sparkle EdDSA private key is in the login Keychain (account `glink`). Back it up, because you can't ship updates to existing installs without it.
 
 ---
 
-Built by B. Sai Pranav.
+Built by B. Sai Pranav. MCP security rules from [Tollgate](https://github.com/SaiPranav13188/Tollgate).

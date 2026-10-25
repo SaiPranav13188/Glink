@@ -59,3 +59,28 @@ enum MCPSelfTest {
         }
     }
 }
+
+/// `--demo-permission` (with --ephemeral): opens write_file from the filesystem server with the form
+/// filled in and the permission sheet showing. For screenshots and manual checks.
+@MainActor
+enum MCPPermissionDemo {
+    static func run() {
+        Task { @MainActor in
+            let tmp = FileManager.default.temporaryDirectory.appending(path: "glink-demo")
+            try? FileManager.default.createDirectory(at: tmp, withIntermediateDirectories: true)
+            let dir = realpath(tmp.path, nil).map { p in defer { free(p) }; return String(cString: p) } ?? tmp.path
+            let entry = MCPServerEntry(name: "filesystem", command: "npx",
+                                       args: ["-y", "@modelcontextprotocol/server-filesystem@2025.8.21", dir])
+            entry.enabled = true
+            entry.grade = entry.securityResult.letter
+            DataStore.shared.context.insert(entry)
+            await MCPClientManager.shared.connect(entry)
+            guard let tool = MCPClientManager.shared.tools[entry.id]?.first(where: { $0.name == "write_file" }) else { return }
+            PanelController.shared.show(route: .mcpTool(tool))
+            let run = PanelController.shared.viewModel.mcpTool
+            run.values = ["path": dir + "/hello.txt", "content": "Hello from Glink 👋"]
+            try? await Task.sleep(for: .milliseconds(600))
+            run.submit()
+        }
+    }
+}

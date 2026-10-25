@@ -90,7 +90,7 @@ struct InjectionDetectorTests {
     struct Sample: Decodable { let label: String; let kind: String; let text: String }
 
     @Test func detectionAndFalsePositiveRates() throws {
-        let url = try #require(Bundle.module.url(forResource: "samples", withExtension: "json", subdirectory: "Fixtures/injection"))
+        let url = try #require(FixtureBundle.bundle.url(forResource: "samples", withExtension: "json", subdirectory: "Fixtures/injection"))
         let samples = try JSONDecoder().decode([Sample].self, from: Data(contentsOf: url))
         let injected = samples.filter { $0.label == "injected" }
         let clean = samples.filter { $0.label == "clean" }

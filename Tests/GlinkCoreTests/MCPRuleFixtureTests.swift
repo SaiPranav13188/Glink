@@ -10,7 +10,7 @@ struct MCPRuleFixtureTests {
     static let fakeGitHub = "ghp_" + String(repeating: "FAKE0", count: 8)
 
     func scan(_ fixture: String, permissions: Int? = nil) throws -> [MCPServerResult] {
-        let url = try #require(Bundle.module.url(forResource: fixture, withExtension: "json", subdirectory: "Fixtures/mcp"))
+        let url = try #require(FixtureBundle.bundle.url(forResource: fixture, withExtension: "json", subdirectory: "Fixtures/mcp"))
         let text = try String(contentsOf: url, encoding: .utf8).replacingOccurrences(of: "{{FAKE_GITHUB}}", with: Self.fakeGitHub)
         return try MCPConfigAnalyzer.parseServers(from: Data(text.utf8), path: url.path, source: "Fixture")
             .map { MCPConfigAnalyzer.analyze($0, homeDirectory: "/Users/test", filePermissions: permissions) }

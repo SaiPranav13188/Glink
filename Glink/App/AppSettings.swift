@@ -72,7 +72,6 @@ final class AppSettings {
     var snippetsEnabled: Bool { didSet { save(snippetsEnabled, "snippetsEnabled") } }
     var fileSearchEnabled: Bool { didSet { save(fileSearchEnabled, "fileSearchEnabled") } }
     var hasCompletedOnboarding: Bool { didSet { save(hasCompletedOnboarding, "hasCompletedOnboarding") } }
-    var debugLogging: Bool { didSet { save(debugLogging, "debugLogging") } }
     /// Extra MCP config files or folders added with "Add Config…".
     var mcpExtraPaths: [String] { didSet { save(mcpExtraPaths, "mcpExtraPaths") } }
     /// Clicking the menu bar icon opens a compact search popover instead of the menu.
@@ -97,7 +96,6 @@ final class AppSettings {
         snippetsEnabled = d.object(forKey: "snippetsEnabled") as? Bool ?? true
         fileSearchEnabled = d.object(forKey: "fileSearchEnabled") as? Bool ?? true
         hasCompletedOnboarding = d.bool(forKey: "hasCompletedOnboarding")
-        debugLogging = d.bool(forKey: "debugLogging")
         mcpExtraPaths = d.stringArray(forKey: "mcpExtraPaths") ?? []
         menuBarMiniMode = d.bool(forKey: "menuBarMiniMode")
     }

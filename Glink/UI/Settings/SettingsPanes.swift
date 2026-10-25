@@ -577,7 +577,6 @@ struct AdvancedSettingsPane: View {
                 Text("MCP security: added configs")
             }
             Section("Debugging") {
-                Toggle("Verbose logging", isOn: $settings.debugLogging)
                 Button("Copy Diagnostics") {
                     Paster.copy(diagnostics)
                     flash("Diagnostics copied.")

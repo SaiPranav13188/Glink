@@ -52,6 +52,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         if ProcessInfo.processInfo.arguments.contains("--animation-benchmark") { Benchmark.runAnimationScript() }
         if ProcessInfo.processInfo.arguments.contains("--mcp-selftest") { MCPSelfTest.run() }
         if ProcessInfo.processInfo.arguments.contains("--semantic-selftest") { SemanticSelfTest.run() }
+        if ProcessInfo.processInfo.arguments.contains("--demo-permission") { MCPPermissionDemo.run() }
+        if ProcessInfo.processInfo.arguments.contains("--mascot") {
+            DispatchQueue.main.asyncAfter(deadline: .now() + 1.2) { Mascots.shared.celebrate(.securityAllClear) }
+        }
     }
 
     /// `Glink --open [query]` opens the panel at launch (handy for screenshots and UI tests).

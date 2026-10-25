@@ -61,7 +61,12 @@ targets:
   GlinkCoreTests:
     type: bundle.unit-test
     platform: macOS
-    sources: [Tests/GlinkCoreTests]
+    sources:
+      - path: Tests/GlinkCoreTests
+        excludes: ["Fixtures/**"]
+      - path: Tests/GlinkCoreTests/Fixtures
+        type: folder
+        buildPhase: resources
     dependencies:
       - target: GlinkCore
       - package: MCPShieldCore
