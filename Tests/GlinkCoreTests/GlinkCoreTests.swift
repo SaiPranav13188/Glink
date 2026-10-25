@@ -230,7 +230,7 @@ struct MCPConfigTests {
 
     @Test func referencesAreNotSecrets() throws {
         let r = try results("""
-        {"mcpServers": {"gh": {"command": "/usr/local/bin/gh-mcp", "env": {"GITHUB_TOKEN": "${GITHUB_TOKEN}", "API_KEY": "<YOUR_API_KEY>"}}}}
+        {"mcpServers": {"gh": {"command": "/usr/bin/gh-mcp", "env": {"GITHUB_TOKEN": "${GITHUB_TOKEN}", "API_KEY": "<YOUR_API_KEY>"}}}}
         """)
         #expect(r[0].findings.isEmpty)
         #expect(r[0].score == 100)
