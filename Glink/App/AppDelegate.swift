@@ -34,14 +34,18 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         TextExpander.shared.startIfPossible()
 
         KeyboardShortcuts.onKeyDown(for: .togglePanel) {
-            MainActor.assumeIsolated { PanelController.shared.toggle() }
+            MainActor.assumeIsolated { HotkeyGuard.shared.toggleFromHotkey() }
         }
+        HotkeyGuard.shared.startIfPossible()
         KeyboardShortcuts.onKeyDown(for: .clipboardHistory) {
             MainActor.assumeIsolated { PanelController.shared.show(route: .clipboard) }
         }
 
         NotificationCenter.default.addObserver(forName: .accessibilityGranted, object: nil, queue: .main) { _ in
-            MainActor.assumeIsolated { TextExpander.shared.startIfPossible() }
+            MainActor.assumeIsolated {
+                TextExpander.shared.startIfPossible()
+                HotkeyGuard.shared.startIfPossible()
+            }
         }
 
         if !AppSettings.shared.hasCompletedOnboarding {
