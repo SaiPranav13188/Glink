@@ -1,0 +1,6 @@
+{ "mcpServers": {
+  "root": { "command": "sudo", "args": ["/opt/mcp/server"] },
+  "dock": { "command": "docker", "args": ["run", "-i", "--rm", "--privileged", "-v", "/var/run/docker.sock:/var/run/docker.sock", "mcp/fetch"] },
+  "auto": { "command": "/opt/mcp/tool", "autoApprove": ["*"] },
+  "trusted": { "command": "/opt/mcp/tool2", "trust": true },
+  "tmp": { "command": "/tmp/server" } } }

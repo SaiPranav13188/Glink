@@ -121,7 +121,9 @@ private struct ScoreGauge: View {
                         .monospacedDigit()
                         .contentTransition(.numericText(value: progress))
                     if hasServers {
-                        Text("lowest").font(.system(size: 9, weight: .semibold)).foregroundStyle(.secondary)
+                        Text(MCPGrade.letter(for: score)).font(.system(size: 11, weight: .heavy, design: .rounded))
+                            .foregroundStyle(color)
+                            .contentTransition(.numericText())
                     }
                 }
             }
@@ -173,13 +175,8 @@ private struct ServerDetail: View {
                     .accessibilityElement(children: .combine)
                     .accessibilityAddTraits(.isHeader)
                     Spacer()
-                    let style = MCPCheckModel.gradeStyle(result.score)
-                    Label("\(result.score) · \(result.grade)", systemImage: style.symbol)
-                        .font(.system(size: 12, weight: .semibold))
-                        .foregroundStyle(.primary)
-                        .padding(.horizontal, 8)
-                        .padding(.vertical, 4)
-                        .background(Capsule().fill(style.tint.color.opacity(0.12)))
+                    GradeBadge(score: result.score, grade: result.grade)
+        
                 }
                 if !result.displayCommand.isEmpty {
                     Text(result.displayCommand)
@@ -241,5 +238,33 @@ private struct FindingCard: View {
         .padding(12)
         .frame(maxWidth: .infinity, alignment: .leading)
         .background(RoundedRectangle(cornerRadius: 10, style: .continuous).fill(Color.primary.opacity(0.035)))
+    }
+}
+
+/// Letter + score badge whose number counts up from 0 when a server is selected.
+private struct GradeBadge: View {
+    let score: Int
+    let grade: String
+    @State private var shown = 0
+
+    var body: some View {
+        let style = MCPCheckModel.gradeStyle(score)
+        HStack(spacing: 6) {
+            Text(MCPGrade.letter(for: shown))
+                .font(.system(size: 13, weight: .heavy, design: .rounded))
+                .foregroundStyle(style.tint.color)
+            Text("\(shown) · \(grade)")
+                .font(.system(size: 12, weight: .semibold))
+                .monospacedDigit()
+        }
+        .contentTransition(.numericText(value: Double(shown)))
+        .padding(.horizontal, 8)
+        .padding(.vertical, 4)
+        .background(Capsule().fill(style.tint.color.opacity(0.14)))
+        .onAppear {
+            withAnimation(Motion.resolved(.spring(response: 0.7, dampingFraction: 0.9))) { shown = score }
+        }
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel("Grade \(MCPGrade.letter(for: score)), score \(score), \(grade)")
     }
 }

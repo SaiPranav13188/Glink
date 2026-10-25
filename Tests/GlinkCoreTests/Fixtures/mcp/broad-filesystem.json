@@ -1,0 +1,2 @@
+{ "mcpServers": { "fs-root": { "command": "npx", "args": ["@modelcontextprotocol/server-filesystem@2025.3.28", "/"] },
+                  "fs-home": { "command": "npx", "args": ["@modelcontextprotocol/server-filesystem@2025.3.28", "~"] } } }

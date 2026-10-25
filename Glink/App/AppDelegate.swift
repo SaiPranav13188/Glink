@@ -144,7 +144,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
             open.setShortcut(shortcut)
         }
         menu.addItem(withTitle: "Clipboard History", action: #selector(openClipboard), keyEquivalent: "").target = self
-        menu.addItem(withTitle: "MCP Config Check", action: #selector(openMCP), keyEquivalent: "").target = self
+        menu.addItem(withTitle: "Check MCP Security", action: #selector(openMCP), keyEquivalent: "").target = self
         menu.addItem(withTitle: FloatingNotesController.shared.isVisible ? "Hide Floating Notes" : "Floating Notes",
                      action: #selector(toggleNotes), keyEquivalent: "").target = self
         menu.addItem(.separator())

@@ -312,7 +312,7 @@ final class MCPCheckModel {
         return SearchItem(
             id: r.id, title: r.raw.name, subtitle: r.raw.source + (r.raw.disabled ? " · disabled" : ""),
             icon: .symbol(style.symbol, tint: style.tint), kind: .mcp,
-            accessory: "\(r.score)",
+            accessory: "\(r.letter) · \(r.score)",
             actions: [
                 ItemAction(id: "reveal", title: "Show Config in Finder", symbol: "folder", shortcut: .returnKey) {
                     NSWorkspace.shared.activateFileViewerSelecting([URL(fileURLWithPath: path)])
@@ -367,7 +367,7 @@ final class MCPCheckModel {
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) {
             NSApp.activate()
             let panel = NSSavePanel()
-            panel.nameFieldStringValue = "MCP Config Check.json"
+            panel.nameFieldStringValue = "MCP Security Report.json"
             panel.allowedContentTypes = [.json]
             guard panel.runModal() == .OK, let url = panel.url else { return }
             do {

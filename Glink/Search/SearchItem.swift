@@ -213,7 +213,7 @@ enum Route: Hashable {
         switch self {
         case .clipboard: "Clipboard History"
         case .ai(let r): r.command.title
-        case .mcpCheck: "MCP Config Check"
+        case .mcpCheck: "Check MCP Security"
         case .snippets: "Search Snippets"
         case .scriptOutput(let o): o.title
         case .recentActions: "Recent Actions"

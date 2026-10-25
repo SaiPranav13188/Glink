@@ -1,0 +1,1 @@
+{ "mcpServers": { "search": { "command": "/usr/local/bin/search-mcp", "env": { "SEARCH_API_KEY": "s3cr3tValue-1234567890abcd" } } } }

@@ -1,0 +1,1 @@
+{ "mcpServers": { "remote": { "url": "http://mcp.example.com/sse" }, "local": { "url": "http://localhost:8080/mcp" } } }

@@ -138,7 +138,7 @@ final class GlinkUITests: XCTestCase {
         app.typeKey(.escape, modifierFlags: [])
         searchField.typeKey(.escape, modifierFlags: [])
 
-        type("mcp config check")
+        type("check mcp security")
         searchField.typeKey(.return, modifierFlags: [])
         XCTAssertTrue(app.buttons["Back"].waitForExistence(timeout: 3))
         sleep(1)   // let the scan finish

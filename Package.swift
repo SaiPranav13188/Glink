@@ -40,8 +40,9 @@ let package = Package(
         ),
         .testTarget(
             name: "GlinkCoreTests",
-            dependencies: ["GlinkCore"],
-            path: "Tests/GlinkCoreTests"
+            dependencies: ["GlinkCore", .product(name: "MCPShieldCore", package: "MCPShieldCore")],
+            path: "Tests/GlinkCoreTests",
+            resources: [.copy("Fixtures")]
         ),
     ]
 )

@@ -555,7 +555,7 @@ struct AdvancedSettingsPane: View {
             }
             Section {
                 if settings.mcpExtraPaths.isEmpty {
-                    Text("None. Use “Add Config…” in MCP Config Check to include project configs.")
+                    Text("None. Use “Add Config…” in Check MCP Security to include project configs.")
                         .foregroundStyle(.secondary)
                 }
                 ForEach(settings.mcpExtraPaths, id: \.self) { path in
@@ -574,7 +574,7 @@ struct AdvancedSettingsPane: View {
                     .transition(.opacity.combined(with: .move(edge: .top)))
                 }
             } header: {
-                Text("MCP Config Check: added configs")
+                Text("MCP security: added configs")
             }
             Section("Debugging") {
                 Toggle("Verbose logging", isOn: $settings.debugLogging)

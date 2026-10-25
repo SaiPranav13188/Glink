@@ -49,12 +49,15 @@ public struct MCPServerResult: Sendable, Identifiable {
     public let raw: MCPServerConfig
     public let findings: [Finding]
     public let score: Int
+    /// Tollgate's label: Good, Needs work, At risk.
     public var grade: String { Scoring.grade(score) }
-    /// Command line with secrets redacted, safe to display.
+    /// School-style letter for badges: A–F.
+    public var letter: String { MCPGrade.letter(for: score) }
+    /// Command line with secrets masked to their first 4 characters, safe to display.
     public var displayCommand: String {
         let r = Report.RedactedServer(raw.shieldConfig)
-        if let url = r.url { return url }
-        return ([r.command ?? ""] + r.args).joined(separator: " ").trimmingCharacters(in: .whitespaces)
+        let text = r.url ?? ([r.command ?? ""] + r.args).joined(separator: " ").trimmingCharacters(in: .whitespaces)
+        return SecretMask.apply(text, sensitive: Report.sensitiveValues(in: [raw.shieldConfig]))
     }
     var scanResult: ScanResult { ScanResult(server: raw.shieldConfig, findings: findings, score: score, categoryScores: [:]) }
 }
@@ -73,7 +76,41 @@ public struct MCPReport: Sendable {
     /// The headline score: the weakest server, since one risky server is the risk.
     public var score: Int { results.map(\.score).min() ?? 100 }
     public var grade: String { Scoring.grade(score) }
+    public var letter: String { MCPGrade.letter(for: score) }
     public func count(_ severity: Severity) -> Int { findings.filter { $0.severity == severity }.count }
+}
+
+/// Letter grades on top of Tollgate's 0–100 score. Tollgate caps any critical finding at 59 (F)
+/// and any high finding at 84 (B at best), so one serious problem is never averaged away.
+public enum MCPGrade {
+    public static func letter(for score: Int) -> String {
+        switch score {
+        case 90...: "A"
+        case 80..<90: "B"
+        case 70..<80: "C"
+        case 60..<70: "D"
+        default: "F"
+        }
+    }
+}
+
+/// Never show a full secret: Glink shows only its first 4 characters.
+public enum SecretMask {
+    public static func mask(_ secret: String) -> String {
+        secret.count <= 4 ? "••••" : String(secret.prefix(4)) + "••••"
+    }
+
+    /// Replaces every sensitive value, and Tollgate's `abcdef...yz` redactions of them, with the 4-character mask.
+    public static func apply(_ text: String, sensitive: Set<String>) -> String {
+        var out = text
+        for value in sensitive.sorted(by: { $0.count > $1.count }) where value.count >= 4 {
+            out = out.replacingOccurrences(of: value, with: mask(value))
+            out = out.replacingOccurrences(of: Secrets.redact(value), with: mask(value))
+        }
+        // Known key formats that weren't in a recognized field.
+        for (_, value) in Secrets.matches(in: out) { out = out.replacingOccurrences(of: value, with: mask(value)) }
+        return out
+    }
 }
 
 public enum MCPConfigAnalyzer {
@@ -95,7 +132,27 @@ public enum MCPConfigAnalyzer {
     /// Config file names looked for inside an added folder (same set as Tollgate's "Add Config…").
     public static let projectConfigNames = [".mcp.json", "mcp.json", ".cursor/mcp.json", ".vscode/mcp.json", "claude_desktop_config.json"]
 
-    public static let glinkRuleIDs = ["GLK-001", "GLK-002", "GLK-003", "GLK-004", "GLK-005", "GLK-006"]
+    public static let glinkRuleIDs = ["GLK-001", "GLK-002", "GLK-003", "GLK-004", "GLK-005", "GLK-006", "GLK-007"]
+
+    /// Publishers whose MCP packages are well known. Anything else gets a low-severity heads-up.
+    public static let knownPublishers: [String] = [
+        "@modelcontextprotocol/", "@anthropic-ai/", "@github/", "@cloudflare/", "@playwright/", "@upstash/",
+        "@supabase/", "@stripe/", "@notionhq/", "@sentry/", "@vercel/", "@microsoft/", "@azure/", "@google-cloud/",
+        "@browserbasehq/", "@heroku/", "@shopify/", "@atlassian/", "@linear/", "@figma/",
+        // Official Python reference servers (uvx / pipx)
+        "mcp-server-fetch", "mcp-server-git", "mcp-server-time", "mcp-server-sqlite", "mcp-server-sentry",
+        // Docker images
+        "mcp/", "ghcr.io/github/", "docker.io/mcp/",
+    ]
+
+    /// The package a launcher (npx, uvx, docker…) runs, if any.
+    static func launchedPackage(_ server: MCPServerConfig) -> String? {
+        let name = ((server.command ?? "") as NSString).lastPathComponent.lowercased()
+        let runners: Set<String> = ["npx", "bunx", "pnpx", "uvx", "pipx", "docker", "podman"]
+        guard runners.contains(name) || ((name == "pnpm" || name == "yarn") && server.args.first == "dlx") else { return nil }
+        let skip: Set<String> = ["-y", "--yes", "dlx", "run", "-i", "--rm", "-q", "--from"]
+        return server.args.first { !skip.contains($0) && !$0.hasPrefix("-") && !$0.contains("=") }
+    }
 
     // MARK: Scanning
 
@@ -154,7 +211,14 @@ public enum MCPConfigAnalyzer {
         let shield = Scanner.scan(server.shieldConfig)
         let extra = glinkFindings(for: server, homeDirectory: homeDirectory, filePermissions: filePermissions,
                                   hasSecret: shield.findings.contains { $0.category == .secrets || $0.ruleID == "CFG-001" })
+        let sensitive = Report.sensitiveValues(in: [server.shieldConfig])
         let findings = (shield.findings + extra)
+            .map { f -> Finding in
+                var f = f
+                f.detail = SecretMask.apply(f.detail, sensitive: sensitive)
+                f.evidence = f.evidence.map { SecretMask.apply($0, sensitive: sensitive) }
+                return f
+            }
             .sorted { ($0.severity.rank, $0.ruleID, $0.target) < ($1.severity.rank, $1.ruleID, $1.target) }
         return MCPServerResult(raw: server, findings: findings, score: Scoring.score(findings).total)
     }
@@ -307,6 +371,16 @@ public enum MCPConfigAnalyzer {
             add("GLK-005", .high, .config, "Runs a program from a temporary folder",
                 "\(command) lives in a folder that other programs can write to.",
                 "Move it somewhere protected, like /usr/local/bin or ~/.local/bin.")
+        }
+
+        // GLK-007: unknown or unverified publisher
+        if let package = launchedPackage(server) {
+            let lowered = package.lowercased()
+            if !knownPublishers.contains(where: { lowered.hasPrefix($0) }) {
+                add("GLK-007", .low, .config, "Unknown or unverified publisher",
+                    "\(package) isn't from a publisher Glink recognizes. That's not necessarily bad, but it runs with your permissions.",
+                    "Check the package's source and maintainer before trusting it, and pin a version you've reviewed.")
+            }
         }
 
         // GLK-006: config holding a secret is readable by other accounts

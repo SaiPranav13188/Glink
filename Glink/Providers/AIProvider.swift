@@ -121,7 +121,7 @@ final class MCPCheckProvider: SearchProvider {
     let sectionOrder = 8
     let limit = 1
 
-    private let target = MatchTarget(title: "MCP Config Check", keywords: ["security audit model context protocol servers risk scan"])
+    private let target = MatchTarget(title: "Check MCP Security", keywords: ["mcp config check", "security audit model context protocol servers risk scan"])
 
     func results(for query: String) async -> [SearchItem] {
         guard let m = target.match(FuzzyMatcher.prepareQuery(query)) else { return [] }
@@ -132,7 +132,7 @@ final class MCPCheckProvider: SearchProvider {
     func suggestions() -> [SearchItem] { [Self.item(score: 0, indices: [])] }
 
     static func item(score: Double, indices: [Int]) -> SearchItem {
-        SearchItem(id: "mcp.check", title: "MCP Config Check", subtitle: "Scan MCP server configs for risky settings",
+        SearchItem(id: "mcp.check", title: "Check MCP Security", subtitle: "Scan MCP server configs for risky settings",
                    icon: .symbol("checkmark.shield", tint: .green), kind: .mcp, score: score, matchedIndices: indices,
                    accessory: "Security",
                    actions: [ItemAction(id: "run", title: "Run Check", symbol: "checkmark.shield", shortcut: .returnKey) { .push(.mcpCheck) }])
